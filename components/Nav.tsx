@@ -1,5 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import { Magnetic } from "@/components/Magnetic";
 
 const links = [
@@ -8,32 +13,63 @@ const links = [
   { href: "/#contact", label: "Contact" },
 ];
 
+/**
+ * Compact fixed nav: hides when scrolling down, returns on the first
+ * scroll up. Blends into the hero (no line, no backdrop) and only gains
+ * its hairline + blur once past the first screen.
+ */
 export function Nav() {
+  const [hidden, setHidden] = useState(false);
+  const [pastHero, setPastHero] = useState(false);
+  const pathname = usePathname();
+  const hasHero = pathname === "/"; // only home opens with the full-screen hero
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setHidden(y > lastY && y > 120); // down → hide (after a little travel)
+      lastY = y;
+      setPastHero(hasHero ? y > window.innerHeight * 0.85 : y > 8);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [hasHero]);
+
   return (
-    <header className="px-[var(--edge)] pt-6">
-      <nav className="flex items-center justify-between border-b border-line pb-4">
+    <motion.header
+      className={`fixed inset-x-0 top-0 z-50 px-[var(--edge)] transition-colors duration-300 ${
+        pastHero
+          ? "border-b border-line bg-[rgba(14,13,11,0.75)] backdrop-blur-md"
+          : "border-b border-transparent"
+      }`}
+      animate={{ y: hidden ? "-100%" : "0%" }}
+      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+    >
+      <nav className="flex items-center justify-between py-2.5">
         <Link
           href="/"
-          className="group flex items-center gap-3 font-display text-lg tracking-tight"
+          className="group flex items-center gap-2.5 font-display text-base tracking-tight"
         >
           <Image
             src="/avatar.png"
             alt="Utsav"
-            width={32}
-            height={32}
-            className="rounded-full border border-line self-center"
+            width={26}
+            height={26}
+            className="rounded-full border border-line"
           />
-          <span className="group-hover:text-accent transition-colors duration-200">
+          <span className="transition-colors duration-200 group-hover:text-accent">
             Utsav
           </span>
         </Link>
-        <ul className="flex gap-7">
+        <ul className="flex gap-6">
           {links.map((l) => (
             <li key={l.href}>
               <Magnetic strength={0.5}>
                 <Link
                   href={l.href}
-                  className="font-mono text-small uppercase tracking-widest text-ink-soft hover:text-accent transition-colors duration-200"
+                  className="font-mono text-micro uppercase tracking-widest text-ink-soft transition-colors duration-200 hover:text-accent"
                 >
                   {l.label}
                 </Link>
@@ -42,6 +78,6 @@ export function Nav() {
           ))}
         </ul>
       </nav>
-    </header>
+    </motion.header>
   );
 }

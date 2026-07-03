@@ -1,7 +1,6 @@
 import { Nav } from "@/components/Nav";
 import { Reveal } from "@/components/Reveal";
 import { KineticTitle } from "@/components/KineticTitle";
-import { Marquee } from "@/components/Marquee";
 import { Counter } from "@/components/Counter";
 import { WorkList } from "@/components/WorkList";
 import { Magnetic } from "@/components/Magnetic";
@@ -16,15 +15,6 @@ const heroStats = [
   { value: 3, suffix: "", label: "businesses running on my builds" },
 ];
 
-const services = [
-  "WEB APPS",
-  "DASHBOARDS",
-  "MOBILE APPS",
-  "AUTOMATION",
-  "AI TOOLS",
-  "SERVERS & INFRA",
-];
-
 export default function Home() {
   return (
     <>
@@ -36,21 +26,22 @@ export default function Home() {
         {/* ---- Real businesses: orbiting showcase ---- */}
         <ShowcaseSection />
 
-        {/* ---- Services marquee ---- */}
-        <Marquee
-          items={services}
-          className="font-display border-y border-line py-5 text-[clamp(1.5rem,3.5vw,2.75rem)] font-bold uppercase"
-        />
-
-        {/* ---- Stats ---- */}
-        <section className="px-[var(--edge)] py-[var(--section-gap)]">
+        {/* ---- Everything below rides over the pinned showcase ---- */}
+        <div className="relative z-10">
+        {/* ---- Stats: cream foreground slides over the showcase ---- */}
+        <section className="-mt-[100vh] bg-panel-ink px-[var(--edge)] py-[var(--section-gap)] text-ink-on-panel shadow-[0_-30px_80px_rgba(0,0,0,0.5)]">
+          <Reveal>
+            <h2 className="font-display mb-14 max-w-[18ch] text-[length:var(--text-h1)] font-extrabold uppercase">
+              The numbers behind the noise
+            </h2>
+          </Reveal>
           <dl className="grid grid-cols-2 gap-y-12 md:grid-cols-4">
             {heroStats.map((s, i) => (
               <Reveal key={s.label} delay={i * 0.08}>
                 <div>
                   <dd
                     className={`font-display text-[clamp(2.5rem,5vw,4.5rem)] font-extrabold ${
-                      i % 2 === 0 ? "text-accent" : "text-accent-2"
+                      i % 2 === 0 ? "text-accent-on-panel" : "text-accent-2-on-panel"
                     }`}
                   >
                     <Counter
@@ -59,7 +50,7 @@ export default function Home() {
                       suffix={s.suffix}
                     />
                   </dd>
-                  <dt className="mt-2 max-w-[18ch] text-small text-ink-soft">
+                  <dt className="mt-2 max-w-[18ch] text-small text-ink-soft-on-panel">
                     {s.label}
                   </dt>
                 </div>
@@ -69,7 +60,7 @@ export default function Home() {
         </section>
 
         {/* ---- Selected work ---- */}
-        <section id="work" className="px-[var(--edge)] pb-[var(--section-gap)]">
+        <section id="work" className="bg-paper px-[var(--edge)] py-[var(--section-gap)]">
           <Reveal>
             <div className="mb-12 flex items-baseline justify-between">
               <h2 className="font-display text-[length:var(--text-h1)] font-extrabold uppercase">
@@ -111,7 +102,7 @@ export default function Home() {
         {/* ---- Contact ---- */}
         <section
           id="contact"
-          className="px-[var(--edge)] py-[var(--section-gap)]"
+          className="bg-paper px-[var(--edge)] py-[var(--section-gap)]"
         >
           <Reveal>
             <p className="mb-6 font-mono text-micro uppercase tracking-[0.25em] text-accent">
@@ -140,6 +131,7 @@ export default function Home() {
             </Magnetic>
           </Reveal>
         </section>
+        </div>
       </main>
     </>
   );
