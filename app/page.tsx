@@ -29,7 +29,8 @@ export default function Home() {
         {/* ---- Everything below rides over the pinned showcase ---- */}
         <div className="relative z-10">
         {/* ---- Stats: cream foreground slides over the showcase ---- */}
-        <section className="-mt-[100vh] bg-panel-ink px-[var(--edge)] py-[var(--section-gap)] text-ink-on-panel shadow-[0_-30px_80px_rgba(0,0,0,0.5)]">
+        {/* wall starts pulling right as the 6th card seats (p≈0.72 of the runway) */}
+        <section className="-mt-[140vh] bg-panel-ink px-[var(--edge)] py-[var(--section-gap)] text-ink-on-panel shadow-[0_-30px_80px_rgba(0,0,0,0.5)]">
           <Reveal>
             <h2 className="font-display mb-14 max-w-[18ch] text-[length:var(--text-h1)] font-extrabold uppercase">
               The numbers behind the noise

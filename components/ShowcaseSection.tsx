@@ -30,13 +30,16 @@ const SHOWCASE = [
   { label: "Grit", metric: "23 releases on the Play Store", tag: "product", tint: "#35284a" },
   { label: "SplitFree", metric: "Splitwise, retired by my friend group", tag: "product", tint: "#5c3a1c" },
   { label: "Astro AI", metric: "kundli viewing × AI conversations", tag: "client work", tint: "#452136" },
-  { label: "JustWhisper", metric: "offline voice typing, any window", tag: "tool", tint: "#3d3b24" },
-  { label: "WPM Overlay", metric: "live typing speed, always on top", tag: "tool", tint: "#462d22" },
 ];
 
 const N = SHOWCASE.length;
 const RADIUS = 5.5;
-const ARC = (Math.PI * 2) / N;
+/** angular gap between cards — wider than a closed ring so neighbours
+ * sit half off-screen */
+const SPACING = 0.95;
+/** progress point where the last card holds the front spot; the rest of
+ * the runway is its exit, timed with the cream wall lifting in */
+const LAST_AT = 0.72;
 
 /* ---------- curved panel ---------- */
 
@@ -98,22 +101,20 @@ function Panel({
   const white = useMemo(() => new Color("#ffffff"), []);
 
   useFrame(() => {
-    // panel i sits at i·ARC; rotation (sprung, snapped) spins the ring
-    const angle = index * ARC - rotation.get();
-    // wrap to [-π, π]
-    const a = ((angle + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+    // panel i sits at i·SPACING along an open arc; rotation slides it through
+    const a = index * SPACING - rotation.get();
 
     mesh.current.position.set(
-      Math.sin(a) * RADIUS,
-      Math.sin(a) * 0.55, // diagonal: right side rides high, left sinks low
-      Math.cos(a) * RADIUS - RADIUS
+      Math.sin(a) * RADIUS * 1.28, // stretched: neighbours only ~half visible
+      -Math.sin(a) * 0.62, // diagonal: enters low from the right, exits high left
+      (Math.cos(a) - 1) * RADIUS
     );
-    mesh.current.rotation.y = a;
+    mesh.current.rotation.y = a * 1.12; // a touch more curl on the sides
 
-    const focus = Math.max(0, 1 - Math.abs(a) / (ARC * 0.85));
-    material.opacity = Math.abs(a) > ARC * 2.2 ? 0 : 0.3 + focus * 0.7;
+    const focus = Math.max(0, 1 - Math.abs(a) / (SPACING * 0.8));
+    material.opacity = Math.abs(a) > SPACING * 2.2 ? 0 : 0.3 + focus * 0.7;
     material.color.copy(dark).lerp(white, 0.35 + focus * 0.65);
-    mesh.current.scale.setScalar(0.78 + focus * 0.22);
+    mesh.current.scale.setScalar(0.8 + focus * 0.2);
   });
 
   return <mesh ref={mesh} geometry={geometry} material={material} />;
@@ -156,14 +157,25 @@ export function ShowcaseSection() {
     offset: ["start start", "end end"],
   });
 
-  // snap: stepped target + spring = resistance, then a decisive jump
-  const snapped = useTransform(scrollYProgress, (p) =>
-    Math.min(N - 1, Math.max(0, Math.round(p * (N - 1)))) * ARC
-  );
+  // snap with breathing room: cards drift a little with the scroll so the
+  // stage never feels frozen, resist, then jump decisively. After the last
+  // card, rotation keeps going so it exits while the cream wall lifts.
+  const snapped = useTransform(scrollYProgress, (p) => {
+    const raw = (p / LAST_AT) * (N - 1);
+    const f = Math.min(raw, N - 1);
+    const r = Math.round(f);
+    const drift = (f - r) * 0.24; // partial follow = "still alive" feel
+    const exit = Math.max(0, raw - (N - 1)) * 0.9; // last card leaves with the wall
+    return (r + drift + exit) * SPACING;
+  });
   const rotation = useSpring(snapped, { stiffness: 90, damping: 18, mass: 0.9 });
 
   const [active, setActive] = useState(0);
-  useMotionValueEvent(snapped, "change", (v) => setActive(Math.round(v / ARC)));
+  useMotionValueEvent(scrollYProgress, "change", (p) =>
+    setActive(
+      Math.min(N - 1, Math.max(0, Math.round((p / LAST_AT) * (N - 1))))
+    )
+  );
 
   const entry = SHOWCASE[active];
 

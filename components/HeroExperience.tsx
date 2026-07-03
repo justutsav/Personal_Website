@@ -1,16 +1,14 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-
-const Sakura3D = dynamic(() => import("@/components/Sakura3D"));
 
 const roles = ["WEB APPS", "DASHBOARDS", "MOBILE APPS", "AUTOMATION", "AI TOOLS"];
 
 /**
- * Single-screen hero: centered wordmark over the blurred sakura tree.
- * No pinned runway — scrolling moves straight into the showcase.
+ * Single-screen hero: centered wordmark over a blurred looping cherry
+ * blossom clip. No pinned runway — scrolling moves straight into the
+ * showcase.
  */
 export function HeroExperience() {
   const reduce = useReducedMotion();
@@ -24,13 +22,18 @@ export function HeroExperience() {
 
   return (
     <section className="relative flex h-screen flex-col items-center justify-center overflow-hidden">
-      {/* blurred sakura backdrop */}
-      {!reduce && (
-        <div className="absolute inset-0 blur-[5px] saturate-[0.9]">
-          <Sakura3D />
-        </div>
-      )}
-      {/* soft vignette so type stays readable over the tree */}
+      {/* blurred cherry-blossom clip, rounded frame */}
+      <div className="absolute inset-3 overflow-hidden rounded-3xl md:inset-5">
+        <video
+          className="h-full w-full scale-105 object-cover blur-[6px] saturate-[0.95]"
+          src="/assests/cherry_blosson_3840_2160_24fps.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+      </div>
+      {/* soft vignette so type stays readable over the clip */}
       <div
         aria-hidden
         className="absolute inset-0"
