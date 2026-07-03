@@ -24,22 +24,21 @@ function Sculpture() {
         <mesh scale={1.55}>
           <icosahedronGeometry args={[1, 48]} />
           <MeshDistortMaterial
-            color="#bc4b27"
-            roughness={0.25}
-            metalness={0.15}
+            color="#ff5a24"
+            roughness={0.3}
+            metalness={0.2}
             distort={0.42}
             speed={2}
           />
         </mesh>
-        {/* ink wireframe orbit */}
+        {/* bone wireframe orbits */}
         <mesh scale={2.3} rotation={[0.8, 0.4, 0]}>
           <torusGeometry args={[1, 0.012, 12, 120]} />
-          <meshBasicMaterial color="#1e1a16" wireframe />
+          <meshBasicMaterial color="#f2ede2" wireframe transparent opacity={0.5} />
         </mesh>
         <mesh scale={2.6} rotation={[-0.6, 0.9, 0.3]}>
           <torusGeometry args={[1, 0.008, 12, 120]} />
-          <meshBasicMaterial color="#bc4b27" wireframe />
-        </mesh>
+          <meshBasicMaterial color="#ff5a24" wireframe /></mesh>
       </Float>
     </group>
   );

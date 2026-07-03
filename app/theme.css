@@ -1,35 +1,39 @@
 /*
- * Design tokens — "Warm Editorial" theme.
+ * Design tokens — "Ember" theme.
  *
- * This file is the single source of truth for the site's look.
- * Swap the entire visual identity by editing (or replacing) this file:
- * components only ever reference the semantic variables below.
+ * Warm near-black canvas, fluorescent coral-orange accent, bone-white
+ * type, with an inverted cream band for sectional rhythm. Sharp lines,
+ * vivid contrast.
+ *
+ * This file is the single source of truth for the site's look. Swap the
+ * entire visual identity by editing (or replacing) this file: components
+ * only ever reference the semantic variables below.
  */
 
 :root {
   /* ---- Surfaces ---- */
-  --paper: #faf6ee;         /* page background — warm cream */
-  --paper-raised: #f3ecdd;  /* cards, wells, tinted panels */
-  --panel-ink: #201b16;     /* inverted (dark) sections */
+  --paper: #0e0d0b;         /* page background — warm near-black */
+  --paper-raised: #191713;  /* cards, wells */
+  --panel-ink: #f2ecdf;     /* inverted (cream) sections */
 
   /* ---- Text ---- */
-  --ink: #1e1a16;           /* primary text on paper */
-  --ink-soft: #6b6259;      /* secondary text, captions */
-  --ink-on-panel: #f5efe2;  /* primary text on dark panels */
-  --ink-soft-on-panel: #a89e90;
+  --ink: #f2ede2;           /* primary text on dark */
+  --ink-soft: #a49a88;      /* secondary text, captions */
+  --ink-on-panel: #14120f;  /* primary text on cream panels */
+  --ink-soft-on-panel: #5d5647;
 
   /* ---- Accent ---- */
-  --accent: #bc4b27;        /* rust — links, highlights, numbers */
-  --accent-deep: #8f3a1e;   /* hover / pressed */
-  --accent-on-panel: #e07a50; /* rust adjusted for dark panels */
+  --accent: #ff5a24;        /* fluorescent coral-orange */
+  --accent-deep: #ff8557;   /* hover — brighter on dark */
+  --accent-on-panel: #cf3e12; /* accent adjusted for cream panels */
 
   /* ---- Lines & ornament ---- */
-  --line: rgba(30, 26, 22, 0.16);      /* hairline rules */
-  --line-strong: rgba(30, 26, 22, 0.55);
-  --line-on-panel: rgba(245, 239, 226, 0.18);
+  --line: rgba(242, 237, 226, 0.14);
+  --line-strong: rgba(242, 237, 226, 0.55);
+  --line-on-panel: rgba(20, 18, 15, 0.18);
 
   /* ---- Type scale (fluid) ---- */
-  --text-display: clamp(3rem, 8vw, 7rem);
+  --text-display: clamp(3rem, 9vw, 8.5rem);
   --text-h1: clamp(2.25rem, 5vw, 4rem);
   --text-h2: clamp(1.6rem, 3vw, 2.5rem);
   --text-h3: 1.25rem;

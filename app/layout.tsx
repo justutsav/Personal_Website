@@ -3,6 +3,7 @@ import { Syne, Inter, Geist_Mono } from "next/font/google";
 import { Footer } from "@/components/Footer";
 import { SmoothScroll } from "@/components/SmoothScroll";
 import { Cursor } from "@/components/Cursor";
+import { Preloader } from "@/components/Preloader";
 import "./globals.css";
 
 const syne = Syne({
@@ -40,6 +41,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col grain">
         <SmoothScroll>
+          <Preloader />
           <Cursor />
           {children}
           <Footer />

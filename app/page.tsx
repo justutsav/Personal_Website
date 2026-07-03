@@ -1,4 +1,3 @@
-import dynamic from "next/dynamic";
 import { Nav } from "@/components/Nav";
 import { Reveal } from "@/components/Reveal";
 import { KineticTitle } from "@/components/KineticTitle";
@@ -6,9 +5,8 @@ import { Marquee } from "@/components/Marquee";
 import { Counter } from "@/components/Counter";
 import { WorkList } from "@/components/WorkList";
 import { Magnetic } from "@/components/Magnetic";
+import { HeroExperience } from "@/components/HeroExperience";
 import { featuredProjects } from "@/data/projects";
-
-const Hero3D = dynamic(() => import("@/components/Hero3D"));
 
 const heroStats = [
   { value: 75, prefix: "₹", suffix: "L+", label: "capital managed by my software" },
@@ -31,44 +29,8 @@ export default function Home() {
     <>
       <Nav />
       <main>
-        {/* ---- Hero ---- */}
-        <section className="relative min-h-[92vh] overflow-hidden px-[var(--edge)]">
-          {/* 3D sculpture — right side, behind type */}
-          <div className="absolute inset-y-0 right-[-8vw] w-[60vw] md:right-0 md:w-[46vw]">
-            <Hero3D />
-          </div>
-
-          <div className="relative pt-[12vh]">
-            <Reveal>
-              <p className="mb-8 font-mono text-micro uppercase tracking-[0.25em] text-accent">
-                Utsav · independent developer · India
-              </p>
-            </Reveal>
-            <KineticTitle
-              text="I BUILD SOFTWARE PEOPLE ACTUALLY USE."
-              className="font-display max-w-[11ch] text-[length:var(--text-display)] font-extrabold uppercase"
-              delay={0.15}
-            />
-            <Reveal delay={0.7}>
-              <p className="mt-10 max-w-[46ch] text-ink-soft">
-                Web apps, dashboards, mobile apps, and the servers under them —
-                designed, built and kept running for real businesses. Not demos.
-                Systems with money and users on the line.
-              </p>
-            </Reveal>
-            <Reveal delay={0.85}>
-              <Magnetic className="mt-10">
-                <a
-                  href="#contact"
-                  data-cursor-label="say hi"
-                  className="inline-block rounded-full border border-line-strong px-8 py-4 font-mono text-small uppercase tracking-widest transition-colors duration-300 hover:bg-accent hover:text-[var(--paper)] hover:border-accent"
-                >
-                  Start a project ↓
-                </a>
-              </Magnetic>
-            </Reveal>
-          </div>
-        </section>
+        {/* ---- Hero: scroll-driven experience ---- */}
+        <HeroExperience />
 
         {/* ---- Services marquee ---- */}
         <Marquee
