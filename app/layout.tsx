@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter, Geist_Mono } from "next/font/google";
+import { Syne, Inter, Geist_Mono } from "next/font/google";
 import { Footer } from "@/components/Footer";
+import { SmoothScroll } from "@/components/SmoothScroll";
+import { Cursor } from "@/components/Cursor";
 import "./globals.css";
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+const syne = Syne({
+  variable: "--font-syne",
   subsets: ["latin"],
-  axes: ["opsz", "SOFT", "WONK"],
+  weight: ["600", "700", "800"],
 });
 
 const inter = Inter({
@@ -34,11 +36,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${inter.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${syne.variable} ${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col grain">
-        {children}
-        <Footer />
+        <SmoothScroll>
+          <Cursor />
+          {children}
+          <Footer />
+        </SmoothScroll>
       </body>
     </html>
   );

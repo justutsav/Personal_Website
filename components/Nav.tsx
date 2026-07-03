@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Magnetic } from "@/components/Magnetic";
 
 const links = [
   { href: "/#work", label: "Work" },
@@ -26,15 +27,17 @@ export function Nav() {
             Utsav
           </span>
         </Link>
-        <ul className="flex gap-6 text-sm">
+        <ul className="flex gap-7">
           {links.map((l) => (
             <li key={l.href}>
-              <Link
-                href={l.href}
-                className="text-ink-soft hover:text-accent transition-colors duration-200"
-              >
-                {l.label}
-              </Link>
+              <Magnetic strength={0.5}>
+                <Link
+                  href={l.href}
+                  className="font-mono text-small uppercase tracking-widest text-ink-soft hover:text-accent transition-colors duration-200"
+                >
+                  {l.label}
+                </Link>
+              </Magnetic>
             </li>
           ))}
         </ul>

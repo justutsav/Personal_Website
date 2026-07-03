@@ -115,7 +115,7 @@ export default async function CaseStudy({
           {project.privateNote && (
             <Reveal>
               <aside className="mt-16 bg-paper-raised rounded-sm px-8 py-6 border-l-2 border-accent">
-                <p className="font-display italic text-ink-soft">
+                <p className="font-display text-ink-soft">
                   {project.privateNote}
                 </p>
               </aside>

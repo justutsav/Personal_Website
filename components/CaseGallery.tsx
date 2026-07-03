@@ -25,7 +25,7 @@ export function CaseGallery({ slug, name }: { slug: string; name: string }) {
     return (
       <figure className="my-16 border border-line rounded-sm aspect-[16/10] flex items-center justify-center bg-paper-raised">
         <figcaption className="text-center px-8">
-          <span className="font-display italic text-[length:var(--text-h3)] text-ink-soft">
+          <span className="font-display text-[length:var(--text-h3)] text-ink-soft">
             {name} — screenshots coming soon
           </span>
           <span className="block mt-2 font-mono text-micro text-ink-soft">

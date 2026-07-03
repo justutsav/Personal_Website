@@ -17,7 +17,7 @@
   --color-line-strong: var(--line-strong);
   --color-line-on-panel: var(--line-on-panel);
 
-  --font-display: var(--font-fraunces);
+  --font-display: var(--font-syne);
   --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
 }
@@ -35,12 +35,18 @@ body {
   color: var(--paper);
 }
 
-/* Editorial display headings */
+/* Display headings — bold geometric, no glyph ambiguity at size */
 .font-display {
-  font-family: var(--font-fraunces), Georgia, serif;
-  font-variation-settings: "opsz" 144;
-  letter-spacing: -0.02em;
-  line-height: 1.05;
+  font-family: var(--font-syne), system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+}
+
+/* Native cursor hides while the custom cursor is active */
+.has-custom-cursor,
+.has-custom-cursor * {
+  cursor: none !important;
 }
 
 /* Hairline rule used throughout the magazine grid */
