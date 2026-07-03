@@ -13,6 +13,10 @@
   --color-accent: var(--accent);
   --color-accent-deep: var(--accent-deep);
   --color-accent-on-panel: var(--accent-on-panel);
+  --color-accent-2: var(--accent-2);
+  --color-accent-2-deep: var(--accent-2-deep);
+  --color-accent-2-on-panel: var(--accent-2-on-panel);
+  --color-sakura: var(--sakura);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --color-line-on-panel: var(--line-on-panel);

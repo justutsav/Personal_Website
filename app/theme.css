@@ -26,6 +26,10 @@
   --accent: #ff5a24;        /* fluorescent coral-orange */
   --accent-deep: #ff8557;   /* hover — brighter on dark */
   --accent-on-panel: #cf3e12; /* accent adjusted for cream panels */
+  --accent-2: #5b8cff;      /* electric blue — secondary accent */
+  --accent-2-deep: #8db0ff;
+  --accent-2-on-panel: #2f56c4;
+  --sakura: #ffa7c9;        /* blossom pink (hero tree) */
 
   /* ---- Lines & ornament ---- */
   --line: rgba(242, 237, 226, 0.14);

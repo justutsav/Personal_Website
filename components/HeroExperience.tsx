@@ -10,14 +10,14 @@ import {
   useTransform,
 } from "framer-motion";
 
-const Hero3D = dynamic(() => import("@/components/Hero3D"));
+const Sakura3D = dynamic(() => import("@/components/Sakura3D"));
 
 const roles = ["WEB APPS", "DASHBOARDS", "MOBILE APPS", "AUTOMATION", "AI TOOLS"];
 
 /**
- * Scroll-driven hero: a 220vh runway with a pinned stage. The giant
- * wordmark shrinks and drifts as you scroll while the mission statement
- * takes over — reading it is the experience, not a static banner.
+ * Scroll-driven hero: a 220vh runway with a pinned stage. Centered
+ * wordmark over a blurred sakura tree; scrolling hands the stage to the
+ * mission statement.
  */
 export function HeroExperience() {
   const reduce = useReducedMotion();
@@ -27,17 +27,18 @@ export function HeroExperience() {
     offset: ["start start", "end end"],
   });
 
-  // wordmark: full-bleed → small kicker
-  const nameScale = useTransform(scrollYProgress, [0, 0.55], [1, 0.24]);
-  const nameY = useTransform(scrollYProgress, [0, 0.55], ["0vh", "-30vh"]);
-  const nameOpacity = useTransform(scrollYProgress, [0.55, 0.7], [1, 0]);
+  // wordmark: full-bleed center → shrinks upward and fades
+  const nameScale = useTransform(scrollYProgress, [0, 0.55], [1, 0.5]);
+  const nameY = useTransform(scrollYProgress, [0, 0.55], ["0vh", "-34vh"]);
+  const nameOpacity = useTransform(scrollYProgress, [0.5, 0.68], [1, 0]);
 
   // statement: rises in during the second half
-  const stateY = useTransform(scrollYProgress, [0.45, 0.75], ["60vh", "0vh"]);
+  const stateY = useTransform(scrollYProgress, [0.45, 0.75], ["55vh", "0vh"]);
   const stateOpacity = useTransform(scrollYProgress, [0.45, 0.7], [0, 1]);
 
-  // 3D + cue fade
-  const blobOpacity = useTransform(scrollYProgress, [0, 0.5, 0.8], [1, 0.85, 0.25]);
+  // tree recedes deeper into blur as you scroll
+  const treeOpacity = useTransform(scrollYProgress, [0, 0.55, 0.85], [1, 0.8, 0.3]);
+  const treeScale = useTransform(scrollYProgress, [0, 0.85], [1, 1.12]);
   const cueOpacity = useTransform(scrollYProgress, [0, 0.12], [1, 0]);
 
   // cycling role word
@@ -50,11 +51,14 @@ export function HeroExperience() {
 
   if (reduce) {
     return (
-      <section className="px-[var(--edge)] pt-[16vh] pb-[var(--section-gap)]">
+      <section className="px-[var(--edge)] pt-[16vh] pb-[var(--section-gap)] text-center">
         <h1 className="font-display text-[length:var(--text-display)] font-extrabold uppercase">
-          Utsav<span className="text-accent">.</span>
+          <span className="font-mono text-[0.2em] lowercase tracking-[0.3em] text-accent-2">
+            just
+          </span>
+          UTSAV<span className="text-accent">.</span>
         </h1>
-        <p className="mt-8 max-w-[46ch] text-ink-soft">
+        <p className="mx-auto mt-8 max-w-[46ch] text-ink-soft">
           I build software people actually use — web apps, dashboards, mobile
           apps and the servers under them, for real businesses.
         </p>
@@ -64,26 +68,43 @@ export function HeroExperience() {
 
   return (
     <section ref={ref} className="relative h-[220vh]">
-      <div className="sticky top-0 flex h-screen flex-col justify-center overflow-hidden">
-        {/* 3D sculpture */}
+      <div className="sticky top-0 flex h-screen flex-col items-center justify-center overflow-hidden">
+        {/* blurred sakura backdrop */}
         <motion.div
-          className="absolute inset-y-0 right-[-10vw] w-[65vw] md:right-[-2vw] md:w-[48vw]"
-          style={{ opacity: blobOpacity }}
+          className="absolute inset-0 blur-[5px] saturate-[0.9]"
+          style={{ opacity: treeOpacity, scale: treeScale }}
         >
-          <Hero3D />
+          <Sakura3D />
         </motion.div>
+        {/* soft vignette so type stays readable over the tree */}
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, rgba(14,13,11,0.25) 0%, rgba(14,13,11,0.65) 100%)",
+          }}
+        />
 
-        {/* giant wordmark */}
+        {/* centered wordmark */}
         <motion.div
-          className="relative origin-left px-[var(--edge)]"
+          className="relative text-center"
           style={{ scale: nameScale, y: nameY, opacity: nameOpacity }}
         >
-          <h1 className="font-display text-[clamp(4rem,15vw,14rem)] font-extrabold uppercase leading-[0.9]">
+          <h1 className="font-display relative inline-block text-[clamp(4rem,16vw,15rem)] font-extrabold uppercase leading-[0.9]">
+            <motion.span
+              className="absolute -top-[0.28em] left-[0.06em] font-mono text-[0.16em] lowercase tracking-[0.4em] text-accent-2"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.6 }}
+            >
+              just
+            </motion.span>
             UTSAV<span className="text-accent">.</span>
           </h1>
-          <div className="mt-4 flex items-center gap-4 font-mono text-[clamp(0.8rem,1.4vw,1.1rem)] uppercase tracking-[0.25em]">
+          <div className="mt-6 flex items-center justify-center gap-4 font-mono text-[clamp(0.8rem,1.4vw,1.1rem)] uppercase tracking-[0.25em]">
             <span className="text-ink-soft">I build</span>
-            <span className="relative inline-block h-[1.6em] min-w-[12ch] overflow-hidden text-accent">
+            <span className="relative inline-block h-[1.6em] min-w-[12ch] overflow-hidden text-left text-accent-2">
               <AnimatePresence mode="popLayout">
                 <motion.span
                   key={role}
@@ -97,21 +118,21 @@ export function HeroExperience() {
                 </motion.span>
               </AnimatePresence>
             </span>
-            <span className="text-ink-soft">that people actually use</span>
+            <span className="text-ink-soft">people actually use</span>
           </div>
         </motion.div>
 
         {/* mission statement, phase two */}
         <motion.div
-          className="absolute inset-x-0 top-1/2 -translate-y-1/2 px-[var(--edge)]"
+          className="absolute inset-x-0 top-1/2 -translate-y-1/2 px-[var(--edge)] text-center"
           style={{ y: stateY, opacity: stateOpacity }}
         >
-          <p className="font-display max-w-[16ch] text-[clamp(2.2rem,5.5vw,5rem)] font-extrabold uppercase leading-[1.02]">
+          <p className="font-display mx-auto max-w-[18ch] text-[clamp(2.2rem,5.5vw,5rem)] font-extrabold uppercase leading-[1.02]">
             Real businesses run on my code —{" "}
             <span className="text-accent">₹75L+</span> of other people&apos;s
-            money included.
+            money <span className="text-accent-2">included.</span>
           </p>
-          <p className="mt-8 max-w-[46ch] text-ink-soft">
+          <p className="mx-auto mt-8 max-w-[46ch] text-ink-soft">
             Not demos. Not tutorial projects. Investor portals, trading
             dashboards, Play Store apps — designed, built and kept running.
           </p>
@@ -119,10 +140,11 @@ export function HeroExperience() {
 
         {/* scroll cue */}
         <motion.div
-          className="absolute bottom-8 left-[var(--edge)] flex items-center gap-3 font-mono text-micro uppercase tracking-[0.25em] text-ink-soft"
+          className="absolute bottom-8 left-1/2 flex -translate-x-1/2 items-center gap-3 font-mono text-micro uppercase tracking-[0.25em] text-ink-soft"
           style={{ opacity: cueOpacity }}
         >
           <motion.span
+            className="text-accent-2"
             animate={{ y: [0, 6, 0] }}
             transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
           >

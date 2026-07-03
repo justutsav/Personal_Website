@@ -44,7 +44,11 @@ export default function Home() {
             {heroStats.map((s, i) => (
               <Reveal key={s.label} delay={i * 0.08}>
                 <div>
-                  <dd className="font-display text-[clamp(2.5rem,5vw,4.5rem)] font-extrabold text-accent">
+                  <dd
+                    className={`font-display text-[clamp(2.5rem,5vw,4.5rem)] font-extrabold ${
+                      i % 2 === 0 ? "text-accent" : "text-accent-2"
+                    }`}
+                  >
                     <Counter
                       value={s.value}
                       prefix={s.prefix ?? ""}

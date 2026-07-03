@@ -21,7 +21,10 @@ export function Marquee({
       {items.map((item, i) => (
         <span key={i} className="flex items-center gap-6 pr-6">
           <span>{item}</span>
-          <span aria-hidden className="text-accent">
+          <span
+            aria-hidden
+            className={i % 2 === 0 ? "text-accent" : "text-accent-2"}
+          >
             ✦
           </span>
         </span>
