@@ -1,0 +1,48 @@
+/*
+ * Design tokens — "Warm Editorial" theme.
+ *
+ * This file is the single source of truth for the site's look.
+ * Swap the entire visual identity by editing (or replacing) this file:
+ * components only ever reference the semantic variables below.
+ */
+
+:root {
+  /* ---- Surfaces ---- */
+  --paper: #faf6ee;         /* page background — warm cream */
+  --paper-raised: #f3ecdd;  /* cards, wells, tinted panels */
+  --panel-ink: #201b16;     /* inverted (dark) sections */
+
+  /* ---- Text ---- */
+  --ink: #1e1a16;           /* primary text on paper */
+  --ink-soft: #6b6259;      /* secondary text, captions */
+  --ink-on-panel: #f5efe2;  /* primary text on dark panels */
+  --ink-soft-on-panel: #a89e90;
+
+  /* ---- Accent ---- */
+  --accent: #bc4b27;        /* rust — links, highlights, numbers */
+  --accent-deep: #8f3a1e;   /* hover / pressed */
+  --accent-on-panel: #e07a50; /* rust adjusted for dark panels */
+
+  /* ---- Lines & ornament ---- */
+  --line: rgba(30, 26, 22, 0.16);      /* hairline rules */
+  --line-strong: rgba(30, 26, 22, 0.55);
+  --line-on-panel: rgba(245, 239, 226, 0.18);
+
+  /* ---- Type scale (fluid) ---- */
+  --text-display: clamp(3rem, 8vw, 7rem);
+  --text-h1: clamp(2.25rem, 5vw, 4rem);
+  --text-h2: clamp(1.6rem, 3vw, 2.5rem);
+  --text-h3: 1.25rem;
+  --text-body: 1.0625rem;
+  --text-small: 0.875rem;
+  --text-micro: 0.75rem;
+
+  /* ---- Rhythm ---- */
+  --section-gap: clamp(5rem, 12vh, 9rem);
+  --edge: clamp(1.25rem, 4vw, 4rem); /* page gutter */
+
+  /* ---- Motion ---- */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 200ms;
+  --dur-slow: 700ms;
+}
