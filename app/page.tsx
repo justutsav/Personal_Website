@@ -6,6 +6,7 @@ import { Counter } from "@/components/Counter";
 import { WorkList } from "@/components/WorkList";
 import { Magnetic } from "@/components/Magnetic";
 import { HeroExperience } from "@/components/HeroExperience";
+import { ShowcaseSection } from "@/components/ShowcaseSection";
 import { featuredProjects } from "@/data/projects";
 
 const heroStats = [
@@ -31,6 +32,9 @@ export default function Home() {
       <main>
         {/* ---- Hero: scroll-driven experience ---- */}
         <HeroExperience />
+
+        {/* ---- Real businesses: orbiting showcase ---- */}
+        <ShowcaseSection />
 
         {/* ---- Services marquee ---- */}
         <Marquee

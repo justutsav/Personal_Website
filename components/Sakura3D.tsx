@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
+import { useGLTF } from "@react-three/drei";
 import { useReducedMotion } from "framer-motion";
 import {
+  Box3,
   Color,
   Group,
   InstancedMesh,
@@ -11,6 +13,8 @@ import {
   Quaternion,
   Vector3,
 } from "three";
+
+const GLB_URL = "/models/sakura.glb";
 
 /* ---------- procedural tree ---------- */
 
@@ -173,11 +177,53 @@ function Petals() {
   );
 }
 
-/* ---------- scene ---------- */
+/* ---------- trees: downloaded model, or procedural fallback ---------- */
+
+/** Sketchfab (or any) sakura GLB dropped at public/models/sakura.glb —
+ * normalized to ~5.5 units tall and grounded to match the camera. */
+function GlbTree() {
+  const { scene } = useGLTF(GLB_URL);
+  const normalized = useMemo(() => {
+    const box = new Box3().setFromObject(scene);
+    const size = box.getSize(new Vector3());
+    const scale = 5.5 / (size.y || 1);
+    scene.scale.setScalar(scale);
+    const scaled = new Box3().setFromObject(scene);
+    const center = scaled.getCenter(new Vector3());
+    scene.position.x -= center.x;
+    scene.position.z -= center.z;
+    scene.position.y -= scaled.min.y + 2.8; // ground near bottom of view
+    return scene;
+  }, [scene]);
+  return <primitive object={normalized} />;
+}
+
+function ProceduralTree() {
+  const { branches, tips } = useMemo(buildTree, []);
+  return (
+    <>
+      {branches.map((b, i) => (
+        <mesh key={i} position={b.pos} quaternion={b.quat}>
+          <cylinderGeometry args={[b.radius * 0.7, b.radius, b.len, 6]} />
+          <meshStandardMaterial color="#2e2320" roughness={0.9} />
+        </mesh>
+      ))}
+      <Blossoms tips={tips} />
+    </>
+  );
+}
 
 function Tree() {
   const group = useRef<Group>(null);
-  const { branches, tips } = useMemo(buildTree, []);
+  // probe once for a user-supplied model
+  const [hasGlb, setHasGlb] = useState<boolean | null>(null);
+  useEffect(() => {
+    fetch(GLB_URL, { method: "HEAD" })
+      .then((r) =>
+        setHasGlb(r.ok && !r.headers.get("content-type")?.includes("text/html"))
+      )
+      .catch(() => setHasGlb(false));
+  }, []);
 
   useFrame(({ pointer }, delta) => {
     if (!group.current) return;
@@ -188,13 +234,12 @@ function Tree() {
 
   return (
     <group ref={group}>
-      {branches.map((b, i) => (
-        <mesh key={i} position={b.pos} quaternion={b.quat}>
-          <cylinderGeometry args={[b.radius * 0.7, b.radius, b.len, 6]} />
-          <meshStandardMaterial color="#2e2320" roughness={0.9} />
-        </mesh>
-      ))}
-      <Blossoms tips={tips} />
+      {hasGlb === true && (
+        <Suspense fallback={<ProceduralTree />}>
+          <GlbTree />
+        </Suspense>
+      )}
+      {hasGlb === false && <ProceduralTree />}
       <Petals />
     </group>
   );

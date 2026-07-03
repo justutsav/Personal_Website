@@ -27,18 +27,14 @@ export function HeroExperience() {
     offset: ["start start", "end end"],
   });
 
-  // wordmark: full-bleed center → shrinks upward and fades
-  const nameScale = useTransform(scrollYProgress, [0, 0.55], [1, 0.5]);
-  const nameY = useTransform(scrollYProgress, [0, 0.55], ["0vh", "-34vh"]);
-  const nameOpacity = useTransform(scrollYProgress, [0.5, 0.68], [1, 0]);
+  // wordmark: full-bleed center → shrinks upward and fades out clean
+  const nameScale = useTransform(scrollYProgress, [0, 0.75], [1, 0.55]);
+  const nameY = useTransform(scrollYProgress, [0, 0.75], ["0vh", "-26vh"]);
+  const nameOpacity = useTransform(scrollYProgress, [0.55, 0.85], [1, 0]);
 
-  // statement: rises in during the second half
-  const stateY = useTransform(scrollYProgress, [0.45, 0.75], ["55vh", "0vh"]);
-  const stateOpacity = useTransform(scrollYProgress, [0.45, 0.7], [0, 1]);
-
-  // tree recedes deeper into blur as you scroll
-  const treeOpacity = useTransform(scrollYProgress, [0, 0.55, 0.85], [1, 0.8, 0.3]);
-  const treeScale = useTransform(scrollYProgress, [0, 0.85], [1, 1.12]);
+  // tree recedes as you scroll
+  const treeOpacity = useTransform(scrollYProgress, [0, 0.6, 1], [1, 0.7, 0]);
+  const treeScale = useTransform(scrollYProgress, [0, 1], [1, 1.12]);
   const cueOpacity = useTransform(scrollYProgress, [0, 0.12], [1, 0]);
 
   // cycling role word
@@ -67,7 +63,7 @@ export function HeroExperience() {
   }
 
   return (
-    <section ref={ref} className="relative h-[220vh]">
+    <section ref={ref} className="relative h-[150vh]">
       <div className="sticky top-0 flex h-screen flex-col items-center justify-center overflow-hidden">
         {/* blurred sakura backdrop */}
         <motion.div
@@ -120,22 +116,6 @@ export function HeroExperience() {
             </span>
             <span className="text-ink-soft">people actually use</span>
           </div>
-        </motion.div>
-
-        {/* mission statement, phase two */}
-        <motion.div
-          className="absolute inset-x-0 top-1/2 -translate-y-1/2 px-[var(--edge)] text-center"
-          style={{ y: stateY, opacity: stateOpacity }}
-        >
-          <p className="font-display mx-auto max-w-[18ch] text-[clamp(2.2rem,5.5vw,5rem)] font-extrabold uppercase leading-[1.02]">
-            Real businesses run on my code —{" "}
-            <span className="text-accent">₹75L+</span> of other people&apos;s
-            money <span className="text-accent-2">included.</span>
-          </p>
-          <p className="mx-auto mt-8 max-w-[46ch] text-ink-soft">
-            Not demos. Not tutorial projects. Investor portals, trading
-            dashboards, Play Store apps — designed, built and kept running.
-          </p>
         </motion.div>
 
         {/* scroll cue */}
