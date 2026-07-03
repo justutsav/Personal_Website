@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const links = [
   { href: "/#work", label: "Work" },
@@ -9,12 +10,21 @@ const links = [
 export function Nav() {
   return (
     <header className="px-[var(--edge)] pt-6">
-      <nav className="flex items-baseline justify-between border-b border-line pb-4">
+      <nav className="flex items-center justify-between border-b border-line pb-4">
         <Link
           href="/"
-          className="font-display text-lg tracking-tight hover:text-accent transition-colors duration-200"
+          className="group flex items-center gap-3 font-display text-lg tracking-tight"
         >
-          Utsav
+          <Image
+            src="/avatar.png"
+            alt="Utsav"
+            width={32}
+            height={32}
+            className="rounded-full border border-line self-center"
+          />
+          <span className="group-hover:text-accent transition-colors duration-200">
+            Utsav
+          </span>
         </Link>
         <ul className="flex gap-6 text-sm">
           {links.map((l) => (
