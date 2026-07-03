@@ -1,0 +1,208 @@
+export type Metric = { value: string; label: string };
+
+export type Project = {
+  slug: string;
+  name: string;
+  /** One-line hook shown in lists */
+  tagline: string;
+  category: "Client work" | "Product" | "Tool";
+  year: string;
+  stack: string[];
+  /** Featured on the homepage selected-work list */
+  featured: boolean;
+  metrics: Metric[];
+  /** Case study body: problem → build → outcome */
+  story: {
+    problem: string;
+    build: string;
+    outcome: string;
+  };
+  /** Why the code stays private, shown as a small honest note */
+  privateNote?: string;
+  links?: { label: string; href: string }[];
+};
+
+export const projects: Project[] = [
+  {
+    slug: "atul-finance",
+    name: "Atul Finance",
+    tagline: "Investor portal for a trading business — 50+ investors track their returns here.",
+    category: "Client work",
+    year: "2025 — ongoing",
+    stack: ["React", "TypeScript", "Supabase", "PostgreSQL"],
+    featured: true,
+    metrics: [
+      { value: "₹75L+", label: "capital managed" },
+      { value: "50+", label: "active investors" },
+      { value: "1st", label: "project shipped" },
+    ],
+    story: {
+      problem:
+        "A trader raising capital from private investors had no way to show them how their money was doing. Updates travelled over phone calls and screenshots — no trust layer, no history, no self-service.",
+      build:
+        "A web portal where every investor logs in and sees their own capital, returns and full transaction history — while the owner manages everything from an admin side. Built end-to-end: auth, roles, database design, deployment.",
+      outcome:
+        "In production since 2025. Investors check their positions themselves instead of calling. The portal now carries the trust of ₹75L+ in managed capital — and it was my first shipped project. The UI has come a long way since v1, and I keep the early screenshots around as proof of the distance travelled.",
+    },
+    privateNote:
+      "Code stays private — it runs a real business with real investor data. Screenshots and the numbers speak instead.",
+  },
+  {
+    slug: "justtrade",
+    name: "JustTrade",
+    tagline: "One dashboard for every trading account the business runs.",
+    category: "Client work",
+    year: "2026 — ongoing",
+    stack: ["React", "TypeScript", "Supabase", "VPS", "Java"],
+    featured: true,
+    metrics: [
+      { value: "Multi", label: "broker accounts unified" },
+      { value: "Daily", label: "driver of trading decisions" },
+      { value: "Self-hosted", label: "on a VPS I run" },
+    ],
+    story: {
+      problem:
+        "The same trading business ran positions across several accounts. Each broker has its own app, its own format — no single view of exposure, P&L or history across all of them.",
+      build:
+        "A unified trade-tracking system: every trade from every account flows into one place, with dashboards shaped around how the owner actually reads his day. I also set up and run the VPS it lives on — deployment, domains, uptime, all of it.",
+      outcome:
+        "The owner opens one screen instead of five broker apps. Trade history, account-wise breakdowns and daily P&L in the exact layout he asked for. Infrastructure included — not just the app, the server under it.",
+    },
+    privateNote:
+      "Private for the same reason as Atul Finance: live trading data. The dashboard screenshots are sanitised.",
+  },
+  {
+    slug: "justfinance",
+    name: "JustFinance",
+    tagline: "The internal ledger behind the trading business — capital in, returns out, analysis in between.",
+    category: "Client work",
+    year: "2026 — ongoing",
+    stack: ["React", "TypeScript", "Supabase", "PostgreSQL"],
+    featured: false,
+    metrics: [
+      { value: "2", label: "daily operators" },
+      { value: "100%", label: "of business money flows through it" },
+    ],
+    story: {
+      problem:
+        "Investor money coming in, returns going out, expenses, and the business's own analysis — all living in spreadsheets and memory. The owner needed the internal side of the business to be as organised as the investor-facing side.",
+      build:
+        "An internal finance-management system covering the flows Atul Finance doesn't show publicly: capital tracking, business analysis, operational records. Designed around how the owner and his employee actually work, not around a generic template.",
+      outcome:
+        "Used daily by the owner and his employee. It's the quiet system of record behind the two public-facing apps — the kind of software nobody sees and the business can't run without.",
+    },
+    privateNote:
+      "This one can't even be described in full detail publicly — it is the inside of a running business.",
+  },
+  {
+    slug: "grit",
+    name: "Grit",
+    tagline: "A personal-management app on the Play Store — built, shipped and maintained by one person.",
+    category: "Product",
+    year: "2025 — 2026",
+    stack: ["React", "TypeScript", "Capacitor", "Android", "Supabase"],
+    featured: true,
+    metrics: [
+      { value: "23", label: "Play Store releases" },
+      { value: "v1.6", label: "and counting" },
+      { value: "1", label: "developer, every layer" },
+    ],
+    story: {
+      problem:
+        "I wanted to build and sell my own product — a personal-management app: tasks, streaks, focus timers, the works. Started life inside a group project (a Rubik's-cube app), then I took it solo and rebuilt it into something shippable.",
+      build:
+        "Everything a small team would ship, alone: native Android packaging with Capacitor, custom theme system, activity streaks, a focus timer ('Mental Reservoir'), deadline pickers, crash reporting with full native debug symbols, edge-to-edge UI fixes, release management across 23 versioned builds with changelogs and release notes.",
+      outcome:
+        "The honest part: it never made money. The product was real, the marketing wasn't — and that failure taught me more about products than the building did. The engineering trail (23 releases, changelogs, roadmap, crash-free sessions) is exactly what I now bring to client work.",
+    },
+    links: [{ label: "Play Store", href: "#" }],
+  },
+  {
+    slug: "splitfree",
+    name: "SplitFree",
+    tagline: "Splitwise wanted money for basic features. So my friends and I stopped needing Splitwise.",
+    category: "Product",
+    year: "2026 — ongoing",
+    stack: ["React", "TypeScript", "Supabase", "Capacitor"],
+    featured: true,
+    metrics: [
+      { value: "Daily", label: "use in my friend group" },
+      { value: "₹0", label: "paywalls, ever" },
+    ],
+    story: {
+      problem:
+        "Splitwise put payment-recording — the one feature a bill-splitting app exists for — behind a paywall. My friend group actually needed the tool, and paying rent for arithmetic felt wrong.",
+      build:
+        "A full bill-splitting app: groups, expenses, settlements, running balances. Built the flows we actually use instead of the ones that demo well.",
+      outcome:
+        "It replaced Splitwise for my entire friend group — every trip, every dinner, every month of shared expenses runs through it. Software you and your friends use daily is the most honest QA there is.",
+    },
+  },
+  {
+    slug: "astro-ai",
+    name: "Astro AI",
+    tagline: "Kundli viewing plus astrologer chat — a paid client build, delivered.",
+    category: "Client work",
+    year: "2026",
+    stack: ["React", "TypeScript", "Supabase", "AI chat"],
+    featured: true,
+    metrics: [
+      { value: "Paid", label: "client engagement" },
+      { value: "AI", label: "conversation backend" },
+    ],
+    story: {
+      problem:
+        "A client, Advik, wanted a product where users view their kundli (birth chart) and then talk to an astrologer — with AI carrying the conversation behind the scenes.",
+      build:
+        "The full flow: kundli presentation, a chat experience designed to feel like consulting a person, and an AI conversation layer underneath. Delivered as a working product to the client's spec.",
+      outcome:
+        "Delivered and paid for. Second client relationship, and proof the pattern repeats: someone brings an idea, I return a running product.",
+    },
+    privateNote: "Client owns the product, so the repo stays theirs. The flow is shown with screenshots.",
+  },
+  {
+    slug: "justwhisper",
+    name: "JustWhisper",
+    tagline: "Hold a key, speak, release — clean text lands in whatever window you're in. Fully offline.",
+    category: "Tool",
+    year: "2026 — in progress",
+    stack: ["Python", "faster-whisper", "CUDA", "Ollama", "X11"],
+    featured: false,
+    metrics: [
+      { value: "0", label: "cloud calls" },
+      { value: "2", label: "languages (English + Hinglish)" },
+    ],
+    story: {
+      problem:
+        "Voice dictation tools are cloud-bound, app-bound, or both. I wanted Wispr-Flow-style dictation that works in any window on my Linux machine, with nothing leaving the machine.",
+      build:
+        "Hold right-Alt → mic capture → faster-whisper on CUDA → an Ollama LLM tidies English, while Hindi goes through a deterministic Devanagari→Hinglish transliterator I wrote (rule-based, so words are never mutated) → text is typed into the focused window. Ships with a systemd service.",
+      outcome:
+        "I dictate into terminals, browsers, editors — anything. Still a work in progress and honest about its limits, but 'मैं ठीक हूँ' coming out as 'main theek hoon', offline, in any app, is already something I use.",
+    },
+    links: [{ label: "GitHub", href: "https://github.com/justutsav/justWhisper" }],
+  },
+  {
+    slug: "wpm-overlay",
+    name: "WPM Overlay",
+    tagline: "A live typing-speed overlay — because I like watching the needle move.",
+    category: "Tool",
+    year: "2025",
+    stack: ["Python", "Tkinter", "pynput"],
+    featured: false,
+    metrics: [
+      { value: "Live", label: "WPM graph on screen" },
+    ],
+    story: {
+      problem:
+        "I love typing fast (Monkeytype will confirm), and I wanted my live speed visible whatever I'm doing — not just inside a typing-test website.",
+      build:
+        "A lightweight always-on-top overlay: real-time WPM from global key events, a live graph, colour-coded speed bands.",
+      outcome:
+        "A small tool, public on GitHub, that says something bigger: when I want a thing to exist, I build it the same week.",
+    },
+    links: [{ label: "GitHub", href: "https://github.com/justutsav/wpm-overlay" }],
+  },
+];
+
+export const featuredProjects = projects.filter((p) => p.featured);
