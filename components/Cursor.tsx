@@ -50,10 +50,12 @@ export function Cursor() {
 
   return (
     <>
-      {/* dot */}
+      {/* dot — hidden while the badge label shows so it doesn't block text */}
       <motion.div
         className="pointer-events-none fixed left-0 top-0 z-[100] h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent"
         style={{ x, y }}
+        animate={{ opacity: label ? 0 : 1, scale: label ? 0 : 1 }}
+        transition={{ duration: 0.15 }}
       />
       {/* ring / badge */}
       <motion.div

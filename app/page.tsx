@@ -2,11 +2,15 @@ import { Nav } from "@/components/Nav";
 import { Reveal } from "@/components/Reveal";
 import { KineticTitle } from "@/components/KineticTitle";
 import { Counter } from "@/components/Counter";
-import { WorkList } from "@/components/WorkList";
+import { WorkShowcase } from "@/components/WorkShowcase";
 import { Magnetic } from "@/components/Magnetic";
 import { HeroExperience } from "@/components/HeroExperience";
+import { JourneyTimeline } from "@/components/JourneyTimeline";
+import { MusicDisk } from "@/components/MusicDisk";
 import { ShowcaseSection } from "@/components/ShowcaseSection";
+import { ContactMedia } from "@/components/ContactMedia";
 import { featuredProjects } from "@/data/projects";
+import { publicImageSize } from "@/lib/imageMeta";
 
 const heroStats = [
   { value: 75, prefix: "₹", suffix: "L+", label: "capital managed by my software" },
@@ -16,9 +20,19 @@ const heroStats = [
 ];
 
 export default function Home() {
+  // real cover.webp aspect ratios, read at build time — the deck locks each
+  // media slot to its image's own aspect so covers render whole everywhere
+  const coverAspects = Object.fromEntries(
+    featuredProjects.flatMap((p) => {
+      const dims = publicImageSize(`projects/${p.slug}/cover.webp`);
+      return dims ? [[p.slug, dims.width / dims.height]] : [];
+    })
+  );
+
   return (
     <>
       <Nav />
+      <MusicDisk />
       <main>
         {/* ---- Hero: scroll-driven experience ---- */}
         <HeroExperience />
@@ -30,7 +44,7 @@ export default function Home() {
         <div className="relative z-10">
         {/* ---- Stats: cream foreground slides over the showcase ---- */}
         {/* wall starts pulling right as the 6th card seats (p≈0.72 of the runway) */}
-        <section className="-mt-[140vh] bg-panel-ink px-[var(--edge)] py-[var(--section-gap)] text-ink-on-panel shadow-[0_-30px_80px_rgba(0,0,0,0.5)]">
+        <section className="bg-panel-ink px-[var(--edge)] py-[var(--section-gap)] text-ink-on-panel shadow-[0_-30px_80px_rgba(0,0,0,0.5)] md:-mt-[140vh]">
           <Reveal>
             <h2 className="font-display mb-14 max-w-[18ch] text-[length:var(--text-h1)] font-extrabold uppercase">
               The numbers behind the noise
@@ -60,23 +74,14 @@ export default function Home() {
           </dl>
         </section>
 
-        {/* ---- Selected work ---- */}
-        <section id="work" className="bg-paper px-[var(--edge)] py-[var(--section-gap)]">
-          <Reveal>
-            <div className="mb-12 flex items-baseline justify-between">
-              <h2 className="font-display text-[length:var(--text-h1)] font-extrabold uppercase">
-                Selected work
-              </h2>
-              <span className="font-mono text-small text-ink-soft">
-                ({featuredProjects.length})
-              </span>
-            </div>
-          </Reveal>
-          <WorkList projects={featuredProjects} />
-        </section>
+        {/* ---- Selected work: box you scroll into, then stacked cards ---- */}
+        <WorkShowcase projects={featuredProjects} coverAspects={coverAspects} />
 
-        {/* ---- Private-code band: full-bleed dark ---- */}
-        <section className="bg-panel-ink px-[var(--edge)] py-[var(--section-gap)] text-ink-on-panel">
+        {/* ---- The story: horizontal branching timeline (after the work) ---- */}
+        <JourneyTimeline />
+
+        {/* ---- Private-code band: slides up over the held outro screen ---- */}
+        <section id="private-band" className="relative z-10 bg-panel-ink px-[var(--edge)] py-[var(--section-gap)] text-ink-on-panel md:-mt-[20vh]">
           <div className="grid gap-10 md:grid-cols-[1fr_1fr]">
             <Reveal>
               <h2 className="font-display max-w-[16ch] text-[length:var(--text-h1)] font-extrabold uppercase">
@@ -100,37 +105,49 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ---- Contact ---- */}
+        {/* ---- Contact: one-screen, text left, media fades in from the right ---- */}
         <section
           id="contact"
-          className="bg-paper px-[var(--edge)] py-[var(--section-gap)]"
+          className="flex min-h-[calc(100svh-4rem)] flex-col justify-center bg-paper px-[var(--edge)] py-12"
         >
-          <Reveal>
-            <p className="mb-6 font-mono text-micro uppercase tracking-[0.25em] text-accent">
-              Contact
-            </p>
-          </Reveal>
-          <KineticTitle
-            text="HAVE SOMETHING THAT SHOULD EXIST?"
-            className="font-display max-w-[14ch] text-[clamp(2.5rem,6vw,5.5rem)] font-extrabold uppercase"
-          />
-          <Reveal delay={0.3}>
-            <p className="mt-8 max-w-[48ch] text-ink-soft">
-              I take on client work — web apps, dashboards, mobile, automation.
-              Tell me what you need; I&apos;ll tell you how I&apos;d build it.
-            </p>
-          </Reveal>
-          <Reveal delay={0.4}>
-            <Magnetic className="mt-10">
-              <a
-                href="mailto:justutsav.05@gmail.com"
-                data-cursor-label="email"
-                className="inline-block rounded-full bg-accent px-10 py-5 font-mono text-small uppercase tracking-widest text-[var(--paper)] transition-colors duration-300 hover:bg-accent-deep"
-              >
-                justutsav.05@gmail.com
-              </a>
-            </Magnetic>
-          </Reveal>
+          <div className="grid items-center gap-10 md:grid-cols-[1.05fr_1fr]">
+            <div>
+              <Reveal>
+                <p className="mb-4 font-mono text-micro uppercase tracking-[0.25em] text-accent">
+                  Contact
+                </p>
+              </Reveal>
+              <KineticTitle
+                text="HAVE SOMETHING THAT SHOULD EXIST?"
+                className="font-display max-w-[13ch] text-[clamp(1.9rem,4vw,3.4rem)] font-extrabold uppercase leading-[1.02]"
+              />
+              <Reveal delay={0.3}>
+                <p className="mt-5 max-w-[42ch] text-small text-ink-soft">
+                  Client work — web apps, dashboards, mobile, automation. Tell
+                  me what you need; I&apos;ll tell you how I&apos;d build it.
+                </p>
+              </Reveal>
+              <Reveal delay={0.4}>
+                <Magnetic className="mt-8">
+                  <a
+                    href="https://mail.google.com/mail/?view=cm&fs=1&to=justutsav.05@gmail.com&su=Something%20that%20should%20exist"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-cursor-label="email"
+                    className="inline-block rounded-full bg-accent px-8 py-4 font-mono text-small uppercase tracking-widest text-[var(--paper)] transition-colors duration-300 hover:bg-accent-deep"
+                  >
+                    justutsav.05@gmail.com
+                  </a>
+                </Magnetic>
+              </Reveal>
+            </div>
+
+            <Reveal delay={0.2}>
+              <div className="h-[38vh] w-full md:h-[62vh]">
+                <ContactMedia />
+              </div>
+            </Reveal>
+          </div>
         </section>
         </div>
       </main>

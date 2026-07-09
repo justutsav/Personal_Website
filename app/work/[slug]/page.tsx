@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Nav } from "@/components/Nav";
 import { Reveal } from "@/components/Reveal";
+import { KineticTitle } from "@/components/KineticTitle";
 import { CaseGallery } from "@/components/CaseGallery";
 import { projects } from "@/data/projects";
 
@@ -52,11 +53,11 @@ export default async function CaseStudy({
               {project.category} · {project.year}
             </p>
           </Reveal>
-          <Reveal delay={0.1}>
-            <h1 className="font-display text-[length:var(--text-h1)] max-w-[16ch]">
-              {project.name}
-            </h1>
-          </Reveal>
+          <KineticTitle
+            text={project.name}
+            className="font-display max-w-[16ch] text-[clamp(2.6rem,8vw,6rem)] font-extrabold uppercase leading-[0.95]"
+            delay={0.1}
+          />
           <Reveal delay={0.2}>
             <p className="mt-6 text-ink-soft max-w-[55ch] text-[length:var(--text-h3)]">
               {project.tagline}
@@ -67,7 +68,7 @@ export default async function CaseStudy({
               {project.stack.map((s) => (
                 <li
                   key={s}
-                  className="font-mono text-micro uppercase tracking-wide text-ink-soft border border-line rounded-full px-3 py-1"
+                  className="font-mono text-micro uppercase tracking-wide text-ink-soft border border-line rounded-full px-3 py-1 transition-colors duration-200 hover:border-accent hover:text-accent"
                 >
                   {s}
                 </li>
@@ -78,44 +79,70 @@ export default async function CaseStudy({
 
         {/* ---- Metrics band ---- */}
         <Reveal>
-          <dl className="grid grid-cols-2 md:grid-cols-3 gap-y-8 border-y border-line py-8 max-w-[75ch]">
-            {project.metrics.map((m) => (
-              <div key={m.label}>
-                <dd className="font-display text-[length:var(--text-h2)] text-accent">
-                  {m.value}
-                </dd>
-                <dt className="mt-1 text-small text-ink-soft max-w-[20ch]">
-                  {m.label}
-                </dt>
-              </div>
+          <dl className="grid grid-cols-2 gap-y-10 border-y border-line py-10 md:grid-cols-3">
+            {project.metrics.map((m, i) => (
+              <Reveal key={m.label} delay={i * 0.1}>
+                <div>
+                  <dd
+                    className={`font-display text-[clamp(2.2rem,5vw,3.6rem)] font-extrabold leading-none ${
+                      i % 2 === 0 ? "text-accent" : "text-accent-2"
+                    }`}
+                  >
+                    {m.value}
+                  </dd>
+                  <dt className="mt-2 max-w-[20ch] text-small text-ink-soft">
+                    {m.label}
+                  </dt>
+                </div>
+              </Reveal>
             ))}
           </dl>
         </Reveal>
 
-        {/* ---- Story ---- */}
-        <article className="max-w-[68ch]">
+        {/* ---- Story: sticky labels, prose scrolls past ---- */}
+        <article className="mt-16">
           {storySections.map((s, i) => (
-            <Reveal key={s.key}>
-              <section className="mt-16">
-                <h2 className="flex items-baseline gap-4">
-                  <span className="font-mono text-small text-accent">
+            <section
+              key={s.key}
+              className="grid gap-4 border-t border-line py-14 md:grid-cols-[220px_1fr] md:gap-12"
+            >
+              <div className="md:sticky md:top-28 md:self-start">
+                <h2 className="flex items-baseline gap-3">
+                  <span
+                    className={`font-display text-[clamp(2rem,4vw,3rem)] font-extrabold ${
+                      i % 2 === 0 ? "text-accent" : "text-accent-2"
+                    }`}
+                  >
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span className="font-display text-[length:var(--text-h3)]">
+                  <span className="font-mono text-micro uppercase tracking-[0.2em] text-ink-soft">
                     {s.label}
                   </span>
                 </h2>
-                <p className="mt-4 text-ink-soft leading-relaxed">
+              </div>
+              <Reveal>
+                <p className="max-w-[62ch] text-[length:var(--text-h3)] leading-relaxed text-ink">
                   {project.story[s.key]}
                 </p>
-              </section>
-            </Reveal>
+              </Reveal>
+            </section>
           ))}
 
           {project.privateNote && (
             <Reveal>
-              <aside className="mt-16 bg-paper-raised rounded-sm px-8 py-6 border-l-2 border-accent">
-                <p className="font-display text-ink-soft">
+              <aside className="relative mt-8 overflow-hidden rounded-xl border border-accent/40 bg-paper-raised px-8 py-7">
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 opacity-50"
+                  style={{
+                    background:
+                      "repeating-linear-gradient(to bottom, rgba(255,90,36,0.05) 0px, rgba(255,90,36,0.05) 1px, transparent 1px, transparent 4px)",
+                  }}
+                />
+                <p className="relative mb-3 font-mono text-micro uppercase tracking-[0.25em] text-accent">
+                  🔒 Why this stays private
+                </p>
+                <p className="relative max-w-[60ch] text-ink-soft">
                   {project.privateNote}
                 </p>
               </aside>

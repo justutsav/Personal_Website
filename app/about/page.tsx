@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Nav } from "@/components/Nav";
 import { Reveal } from "@/components/Reveal";
+import { KineticTitle } from "@/components/KineticTitle";
 import { Heatmap } from "@/components/Heatmap";
 import { getGithubActivity, getMonkeytypeStats } from "@/lib/activity";
 
@@ -9,6 +10,55 @@ export const metadata: Metadata = {
   description:
     "Independent developer. I build web apps, dashboards, mobile apps and the infrastructure under them.",
 };
+
+type CreditItem = { title: string; by: string; href?: string; note?: string };
+const credits: { group: string; items: CreditItem[] }[] = [
+  {
+    group: "The clips",
+    items: [
+      {
+        title: "“:)”",
+        by: "piot",
+        href: "https://youtu.be/M5VXCixTdEg",
+      },
+      {
+        title: "Daredevil ft. Write This Down",
+        by: "LOREBOUND",
+        href: "https://youtu.be/RLJ7NnJ7Rpo",
+      },
+      {
+        title: "This is Minecraft (Distant Horizons 2.0)",
+        by: "Memonic",
+        href: "https://youtu.be/UtTOK15RBrk",
+      },
+      {
+        title: "Two hero clips + the contact loop",
+        by: "creators unknown",
+        note: "If one of these is yours, email me — I'll credit it properly or take it down.",
+      },
+    ],
+  },
+  {
+    group: "The music",
+    items: [
+      {
+        title: "Feel It Still",
+        by: "Portugal. The Man",
+        href: "https://www.youtube.com/watch?v=pBkHHoOIIn8",
+      },
+      {
+        title: "End of Beginning",
+        by: "Djo",
+        href: "https://www.youtube.com/watch?v=xy3AcmW0lrQ",
+      },
+      {
+        title: "Slipping Through My Fingers",
+        by: "ABBA",
+        href: "https://music.youtube.com/watch?v=hRr7qRb-7k4",
+      },
+    ],
+  },
+];
 
 const infra = [
   {
@@ -42,12 +92,11 @@ export default async function About() {
               About
             </p>
           </Reveal>
-          <Reveal delay={0.1}>
-            <h1 className="font-display text-[length:var(--text-h1)] max-w-[20ch]">
-              I&apos;m Utsav. I turn &ldquo;we need this&rdquo; into running
-              software.
-            </h1>
-          </Reveal>
+          <KineticTitle
+            text="I turn “we need this” into running software."
+            className="font-display max-w-[16ch] text-[clamp(2.2rem,6vw,5rem)] font-extrabold uppercase leading-[1.02]"
+            delay={0.1}
+          />
           <Reveal delay={0.2}>
             <div className="mt-8 max-w-[62ch] space-y-5 text-ink-soft">
               <p>
@@ -72,6 +121,16 @@ export default async function About() {
           </Reveal>
         </section>
 
+        {/* ---- Pull quote ---- */}
+        <section className="pb-[var(--section-gap)]">
+          <Reveal>
+            <p className="font-display max-w-[20ch] text-[clamp(2rem,7vw,5.5rem)] font-extrabold uppercase leading-[0.95]">
+              If it should <span className="text-accent">exist</span>, I build it{" "}
+              <span className="text-accent-2">that week.</span>
+            </p>
+          </Reveal>
+        </section>
+
         {/* ---- Infra stories ---- */}
         <section className="pb-[var(--section-gap)]">
           <Reveal>
@@ -79,14 +138,26 @@ export default async function About() {
               Beyond the browser
             </h2>
           </Reveal>
-          <div className="grid md:grid-cols-3 gap-px bg-line">
+          <div className="grid gap-4 md:grid-cols-3">
             {infra.map((item, i) => (
-              <Reveal key={item.title} delay={i * 0.08}>
-                <div className="bg-paper h-full py-8 md:pr-8 md:[&:not(:first-child)]:pl-8">
-                  <h3 className="font-display text-[length:var(--text-h3)]">
+              <Reveal key={item.title} delay={i * 0.1}>
+                <div className="group relative h-full overflow-hidden rounded-xl border border-line bg-paper-raised p-6 transition-all duration-300 hover:-translate-y-1.5 hover:border-accent">
+                  {/* scanline texture, brightens on hover */}
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 opacity-40 transition-opacity duration-300 group-hover:opacity-80"
+                    style={{
+                      background:
+                        "repeating-linear-gradient(to bottom, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 4px)",
+                    }}
+                  />
+                  <span className="relative font-mono text-micro tracking-widest text-accent-2">
+                    0{i + 1}
+                  </span>
+                  <h3 className="font-display relative mt-4 text-[length:var(--text-h3)] uppercase leading-tight">
                     {item.title}
                   </h3>
-                  <p className="mt-3 text-small text-ink-soft leading-relaxed">
+                  <p className="relative mt-3 text-small leading-relaxed text-ink-soft">
                     {item.body}
                   </p>
                 </div>
@@ -179,13 +250,80 @@ export default async function About() {
           </Reveal>
         </section>
 
+        {/* ---- Credits: the art living on this site ---- */}
+        <section id="credits" className="pb-[var(--section-gap)]">
+          <Reveal>
+            <h2 className="font-mono text-micro uppercase tracking-[0.2em] text-ink-soft mb-3">
+              Credits — the art on this site
+            </h2>
+            <p className="max-w-[58ch] text-small text-ink-soft mb-10">
+              The hero clips and the vinyl-disk songs are other people&apos;s
+              work that I love. Nothing here is licensed or monetised — it
+              lives on a personal portfolio purely as taste. One click and
+              you&apos;re at the source.
+            </p>
+          </Reveal>
+          <div className="grid gap-10 md:grid-cols-2">
+            {credits.map((g, gi) => (
+              <Reveal key={g.group} delay={gi * 0.1}>
+                <div>
+                  <h3 className="font-mono text-micro uppercase tracking-[0.25em] text-accent-2 mb-2">
+                    {g.group}
+                  </h3>
+                  <ul>
+                    {g.items.map((item) => (
+                      <li key={item.title} className="border-t border-line last:border-b">
+                        {item.href ? (
+                          <a
+                            href={item.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            data-cursor-label="open"
+                            className="group flex items-center justify-between gap-4 py-4 transition-[padding] duration-300 hover:pl-3"
+                          >
+                            <span>
+                              <span className="font-display text-[length:var(--text-h3)] font-bold uppercase leading-tight transition-colors duration-200 group-hover:text-accent">
+                                {item.title}
+                              </span>
+                              <span className="block font-mono text-micro uppercase tracking-widest text-ink-soft">
+                                {item.by}
+                              </span>
+                            </span>
+                            <span className="shrink-0 font-mono text-small text-ink-soft transition-transform duration-300 group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-accent">
+                              ↗
+                            </span>
+                          </a>
+                        ) : (
+                          <div className="py-4">
+                            <span className="font-display text-[length:var(--text-h3)] font-bold uppercase leading-tight text-ink-soft">
+                              {item.title}
+                            </span>
+                            <span className="block font-mono text-micro uppercase tracking-widest text-ink-soft">
+                              {item.by}
+                            </span>
+                            {item.note && (
+                              <span className="mt-1 block text-small text-ink-soft">
+                                {item.note}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+
         {/* ---- Elsewhere ---- */}
         <section className="pb-24">
           <Reveal>
             <h2 className="font-mono text-micro uppercase tracking-[0.2em] text-ink-soft mb-8">
               Elsewhere
             </h2>
-            <ul className="space-y-3">
+            <ul>
               {[
                 { label: "GitHub", href: "https://github.com/justutsav" },
                 {
@@ -201,17 +339,18 @@ export default async function About() {
                   href: "mailto:justutsav.05@gmail.com",
                 },
               ].map((l) => (
-                <li key={l.label}>
+                <li key={l.label} className="border-t border-line last:border-b">
                   <a
                     href={l.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group inline-flex items-baseline gap-3"
+                    data-cursor-label="open"
+                    className="group flex items-center justify-between py-5 transition-[padding] duration-300 hover:pl-4"
                   >
-                    <span className="font-display text-[length:var(--text-h3)] group-hover:text-accent transition-colors duration-200">
+                    <span className="font-display text-[length:var(--text-h2)] font-bold uppercase tracking-tight transition-colors duration-200 group-hover:text-accent">
                       {l.label}
                     </span>
-                    <span className="font-mono text-micro text-ink-soft">
+                    <span className="font-mono text-small text-ink-soft transition-transform duration-300 group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-accent">
                       ↗
                     </span>
                   </a>

@@ -26,6 +26,13 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html {
+  /* Chrome scroll anchoring fights the pinned scroll-theatre sections
+     (sticky + negative-margin overlaps + per-frame transforms): mid-scroll
+     it re-anchors and yanks the page BACK UP. Kill it — Lenis owns scroll. */
+  overflow-anchor: none;
+}
+
 body {
   background: var(--paper);
   color: var(--ink);
@@ -37,6 +44,19 @@ body {
 ::selection {
   background: var(--accent);
   color: var(--paper);
+}
+
+/* No text-selection caret/highlight when clicking around — this is a
+   display site, not an editor. Real inputs keep selection. */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+}
+input,
+textarea,
+[contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* Display headings — bold geometric, no glyph ambiguity at size */

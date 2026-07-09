@@ -9,6 +9,7 @@ import { Magnetic } from "@/components/Magnetic";
 
 const links = [
   { href: "/#work", label: "Work" },
+  { href: "/interests", label: "Interests" },
   { href: "/about", label: "About" },
   { href: "/#contact", label: "Contact" },
 ];
@@ -23,6 +24,20 @@ export function Nav() {
   const [pastHero, setPastHero] = useState(false);
   const pathname = usePathname();
   const hasHero = pathname === "/"; // only home opens with the full-screen hero
+
+  // in-page hash links: drive Lenis directly (native anchor jumps don't
+  // work while smooth scroll owns the scroll position)
+  const onHashClick = (e: React.MouseEvent, href: string) => {
+    if (!href.includes("#")) return;
+    const hash = "#" + href.split("#")[1];
+    if (pathname !== "/") return; // let Link navigate home first; SmoothScroll scrolls on load
+    const el = document.querySelector(hash);
+    if (!el) return;
+    e.preventDefault();
+    const lenis = (window as unknown as { lenis?: { scrollTo: (t: Element, o?: object) => void } }).lenis;
+    if (lenis) lenis.scrollTo(el, { offset: -72 });
+    else el.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
     let lastY = window.scrollY;
@@ -59,17 +74,18 @@ export function Nav() {
             height={26}
             className="rounded-full border border-line"
           />
-          <span className="transition-colors duration-200 group-hover:text-accent">
+          <span className="hidden transition-colors duration-200 group-hover:text-accent sm:inline">
             Utsav
           </span>
         </Link>
-        <ul className="flex gap-6">
+        <ul className="flex gap-4 sm:gap-6">
           {links.map((l) => (
             <li key={l.href}>
               <Magnetic strength={0.5}>
                 <Link
                   href={l.href}
-                  className="font-mono text-micro uppercase tracking-widest text-ink-soft transition-colors duration-200 hover:text-accent"
+                  onClick={(e) => onHashClick(e, l.href)}
+                  className="font-mono text-micro uppercase tracking-wide text-ink-soft transition-colors duration-200 hover:text-accent sm:tracking-widest"
                 >
                   {l.label}
                 </Link>

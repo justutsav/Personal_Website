@@ -5,11 +5,13 @@ export type Project = {
   name: string;
   /** One-line hook shown in lists */
   tagline: string;
-  category: "Client work" | "Product" | "Tool";
+  category: "Client work" | "Product" | "Tool" | "Frontend craft";
   year: string;
   stack: string[];
   /** Featured on the homepage selected-work list */
   featured: boolean;
+  /** Orientation of the three small deck shots (phone screenshots vs web) */
+  shotOrientation?: "portrait" | "landscape";
   metrics: Metric[];
   /** Case study body: problem → build → outcome */
   story: {
@@ -46,6 +48,7 @@ export const projects: Project[] = [
     },
     privateNote:
       "Code stays private — it runs a real business with real investor data. Screenshots and the numbers speak instead.",
+    links: [{ label: "atulfinance.com", href: "https://www.atulfinance.com" }],
   },
   {
     slug: "justtrade",
@@ -54,7 +57,7 @@ export const projects: Project[] = [
     category: "Client work",
     year: "2026 — ongoing",
     stack: ["React", "TypeScript", "Supabase", "VPS", "Java"],
-    featured: true,
+    featured: false,
     metrics: [
       { value: "Multi", label: "broker accounts unified" },
       { value: "Daily", label: "driver of trading decisions" },
@@ -115,7 +118,12 @@ export const projects: Project[] = [
       outcome:
         "The honest part: it never made money. The product was real, the marketing wasn't — and that failure taught me more about products than the building did. The engineering trail (23 releases, changelogs, roadmap, crash-free sessions) is exactly what I now bring to client work.",
     },
-    links: [{ label: "Play Store", href: "#" }],
+    links: [
+      {
+        label: "Play Store",
+        href: "https://play.google.com/store/apps/details?id=com.justmanager.app",
+      },
+    ],
   },
   {
     slug: "splitfree",
@@ -159,6 +167,33 @@ export const projects: Project[] = [
         "Delivered and paid for. Second client relationship, and proof the pattern repeats: someone brings an idea, I return a running product.",
     },
     privateNote: "Client owns the product, so the repo stays theirs. The flow is shown with screenshots.",
+  },
+  {
+    slug: "zentry-clone",
+    name: "Zentry Clone",
+    tagline: "The Awwwards-winning Zentry site, rebuilt frame by frame — my GSAP masterclass.",
+    category: "Frontend craft",
+    year: "2025",
+    stack: ["React", "Vite", "Tailwind CSS", "GSAP"],
+    featured: true,
+    shotOrientation: "landscape",
+    metrics: [
+      { value: "GSAP", label: "scroll-driven cinematics" },
+      { value: "Live", label: "deployed on Vercel" },
+      { value: "100%", label: "responsive recreation" },
+    ],
+    story: {
+      problem:
+        "Sites like Zentry win Awwwards because every scroll feels directed, like a film. I wanted that level of motion craft in my own hands — and the only way to earn it was to rebuild one of the best, pixel by pixel.",
+      build:
+        "A full frontend recreation of the Zentry gaming site: cinematic video hero, scroll-triggered reveals and text animations with GSAP, a bento grid, 3D-style hover interactions — responsive across devices, built with React, Vite and Tailwind.",
+      outcome:
+        "Deployed and public. The scroll choreography you're feeling on this very portfolio is a direct descendant of what this build taught me — it turned 'how do they even do that?' into a tool I use for clients.",
+    },
+    links: [
+      { label: "Live site", href: "https://zentry-clone-website-mu.vercel.app/" },
+      { label: "GitHub", href: "https://github.com/justutsav/Zentry-clone-Website" },
+    ],
   },
   {
     slug: "justwhisper",
@@ -205,4 +240,15 @@ export const projects: Project[] = [
   },
 ];
 
-export const featuredProjects = projects.filter((p) => p.featured);
+/** Homepage deck, in display order. */
+const FEATURED_ORDER = [
+  "grit",
+  "zentry-clone",
+  "atul-finance",
+  "astro-ai",
+  "splitfree",
+];
+
+export const featuredProjects = FEATURED_ORDER.map(
+  (slug) => projects.find((p) => p.slug === slug)!
+).filter(Boolean);
