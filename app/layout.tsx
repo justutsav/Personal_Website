@@ -4,6 +4,7 @@ import { Footer } from "@/components/Footer";
 import { SmoothScroll } from "@/components/SmoothScroll";
 import { Cursor } from "@/components/Cursor";
 import { Preloader } from "@/components/Preloader";
+import { MusicProvider } from "@/components/MusicProvider";
 import "./globals.css";
 
 const syne = Syne({
@@ -40,12 +41,14 @@ export default function RootLayout({
       className={`${syne.variable} ${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col grain">
-        <SmoothScroll>
-          <Preloader />
-          <Cursor />
-          {children}
-          <Footer />
-        </SmoothScroll>
+        <MusicProvider>
+          <SmoothScroll>
+            <Preloader />
+            <Cursor />
+            {children}
+            <Footer />
+          </SmoothScroll>
+        </MusicProvider>
       </body>
     </html>
   );

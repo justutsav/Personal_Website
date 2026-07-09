@@ -44,31 +44,47 @@ export function CaseGalleryGrid({ items }: { items: GalleryItem[] }) {
 
   return (
     <>
-      <div className="my-16 grid grid-cols-2 gap-4 md:grid-cols-6 md:gap-5">
-        {items.map((img, i) => {
-          const landscape = img.width >= img.height;
-          return (
-            <button
-              key={img.src}
-              type="button"
-              onClick={() => setOpen(i)}
-              data-cursor-label="zoom"
-              className={`group relative cursor-zoom-in overflow-hidden rounded-lg border border-line bg-paper-raised transition-colors duration-200 hover:border-accent ${
-                landscape ? "col-span-2 md:col-span-3" : "col-span-1 md:col-span-2"
-              }`}
-              style={{ aspectRatio: img.width / img.height }}
-            >
-              <Image
-                src={img.src}
-                alt={img.alt}
-                width={img.width}
-                height={img.height}
-                sizes={landscape ? "(min-width: 768px) 50vw, 100vw" : "(min-width: 768px) 33vw, 50vw"}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-              />
-            </button>
-          );
-        })}
+      <div className="my-16 space-y-5">
+        {/* main shot — its own line, never taller than half the screen */}
+        <button
+          type="button"
+          onClick={() => setOpen(0)}
+          data-cursor-label="zoom"
+          className="group block w-full cursor-zoom-in"
+        >
+          <Image
+            src={items[0].src}
+            alt={items[0].alt}
+            width={items[0].width}
+            height={items[0].height}
+            sizes="(min-width: 768px) 70vw, 100vw"
+            className="mx-auto h-auto max-h-[50vh] w-auto rounded-lg border border-line object-contain transition-transform duration-500 group-hover:scale-[1.01]"
+          />
+        </button>
+
+        {/* the rest, grouped together and small */}
+        {items.length > 1 && (
+          <div className="flex flex-wrap justify-center gap-4">
+            {items.slice(1).map((img, i) => (
+              <button
+                key={img.src}
+                type="button"
+                onClick={() => setOpen(i + 1)}
+                data-cursor-label="zoom"
+                className="group cursor-zoom-in overflow-hidden rounded-lg border border-line transition-colors duration-200 hover:border-accent"
+              >
+                <Image
+                  src={img.src}
+                  alt={img.alt}
+                  width={img.width}
+                  height={img.height}
+                  sizes="(min-width: 768px) 30vw, 45vw"
+                  className="h-auto max-h-[28vh] w-auto object-contain transition-transform duration-500 group-hover:scale-[1.02]"
+                />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <AnimatePresence>

@@ -13,6 +13,7 @@ import {
   useTransform,
 } from "framer-motion";
 import {
+  AdditiveBlending,
   CanvasTexture,
   Color,
   Group,
@@ -29,6 +30,8 @@ import { MOBILE_QUERY, useMediaQuery } from "@/components/useMediaQuery";
 type Service = {
   tag: string;
   label: string;
+  /** forced title line breaks; falls back to width-wrapping `label` */
+  labelLines?: string[];
   metric: string;
   tech: string[];
   tint: string;
@@ -37,37 +40,38 @@ type Service = {
 const SHOWCASE: Service[] = [
   {
     tag: "end to end",
-    label: "Full-stack web apps",
-    metric: "You bring the idea — I return a deployed product. Auth, database, frontend, deployment, all of it.",
-    tech: ["React", "TypeScript", "Supabase", "PostgreSQL", "Next.js"],
+    label: "Full-Stack Websites",
+    labelLines: ["Full-Stack", "Websites"],
+    metric: "A complete website, built and launched for you — from a rough idea to something real people use every day.",
+    tech: ["Logins & accounts", "Your own database", "Live on the web"],
     tint: "#1f4a3a",
   },
   {
-    tag: "data & money",
-    label: "Dashboards & portals",
-    metric: "Investor portals and dashboards that pull scattered data into one screen people actually trust.",
-    tech: ["React", "Supabase", "Realtime", "Recharts", "Auth + roles"],
-    tint: "#1c3a5e",
+    tag: "on the phone",
+    label: "Mobile Apps",
+    metric: "Your product as a real phone app people can download, open, and keep coming back to.",
+    tech: ["On the app store", "Works offline", "Push notifications"],
+    tint: "#2a2f5e",
   },
   {
-    tag: "web to store",
-    label: "Mobile apps",
-    metric: "Web app to a real Play Store listing — 23 releases shipped, subscriptions and push included.",
-    tech: ["Capacitor", "Android", "RevenueCat", "OneSignal"],
-    tint: "#3a2a5a",
-  },
-  {
-    tag: "built in",
-    label: "AI integration",
-    metric: "Chat and assistants backed by LLMs — cloud or fully offline, with vector-aware responses.",
-    tech: ["Vercel AI SDK", "OpenRouter", "Ollama", "pgvector"],
+    tag: "hands off",
+    label: "AI Automation",
+    metric: "Hand off the boring, repeating work — it runs itself, so you don't have to lift a finger.",
+    tech: ["Tedious tasks, gone", "Runs on its own", "Cloud or private"],
     tint: "#4a2148",
   },
   {
-    tag: "the craft",
-    label: "Motion & frontend",
-    metric: "Awwwards-grade, scroll-driven interfaces where every scroll feels directed. Plus the server under it.",
-    tech: ["GSAP", "React Three Fiber", "Framer Motion", "Tailwind", "VPS"],
+    tag: "one clear view",
+    label: "Dashboards & Portals",
+    metric: "All your scattered numbers pulled into one screen you — and the people you answer to — can trust.",
+    tech: ["One clear view", "Always up to date", "Secure logins"],
+    tint: "#1c3a5e",
+  },
+  {
+    tag: "when nothing fits",
+    label: "Custom Tools",
+    metric: "When no app quite fits, a small tool that does exactly the one thing you need — often within the week.",
+    tech: ["Built for one job", "Small & fast", "Made this week"],
     tint: "#5c3a1c",
   },
 ];
@@ -102,8 +106,116 @@ function useCurvedGeometry() {
 }
 
 /** Composite a service card onto a canvas — tag, wrapped title, and a row of
- * framework chips. No external logo assets needed. */
-function makeServiceTexture(entry: Service) {
+ * framework chips. */
+/* ---------- canvas helpers ---------- */
+const TEX_W = 1024;
+const TEX_H = 640;
+
+/** hex (#rrggbb) to rgba() string at alpha a */
+function rgba(hex: string, a: number) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+}
+/** lighten a hex toward white by t (0..1) */
+function lighten(hex: string, t: number) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.round(((n >> 16) & 255) + (255 - ((n >> 16) & 255)) * t);
+  const g = Math.round(((n >> 8) & 255) + (255 - ((n >> 8) & 255)) * t);
+  const b = Math.round((n & 255) + (255 - (n & 255)) * t);
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+/** darken a hex toward the page background (#0e0d0b) by t (0..1) — keeps the
+ * flat card colours in the same warm near-black family as their surroundings */
+function darken(hex: string, t: number) {
+  const n = parseInt(hex.slice(1), 16);
+  const mix = (c: number, b: number) => Math.round(c + (b - c) * t);
+  const r = mix((n >> 16) & 255, 0x0e);
+  const g = mix((n >> 8) & 255, 0x0d);
+  const b = mix(n & 255, 0x0b);
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+/** reusable rounded-rect path */
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+/** cheap tiling noise pattern (built once per canvas) */
+function grainPattern(ctx: CanvasRenderingContext2D) {
+  const t = document.createElement("canvas");
+  t.width = t.height = 128;
+  const tc = t.getContext("2d")!;
+  const id = tc.createImageData(128, 128);
+  for (let i = 0; i < id.data.length; i += 4) {
+    const v = 120 + Math.random() * 135;
+    id.data[i] = id.data[i + 1] = id.data[i + 2] = v;
+    id.data[i + 3] = 255;
+  }
+  tc.putImageData(id, 0, 0);
+  return ctx.createPattern(t, "repeat")!;
+}
+
+/** BACK plane: instead of one flat chunk, alternating vertical stripes in two
+ * close tones of the (darkened) service colour — a subtle light/dark pattern
+ * that reads as texture + depth. Soft-edged so it looks like ridges. */
+function makeCardTexture(entry: Service) {
+  const c = document.createElement("canvas");
+  c.width = TEX_W;
+  c.height = TEX_H;
+  const ctx = c.getContext("2d")!;
+  const W = TEX_W;
+  const H = TEX_H;
+
+  const darkC = darken(entry.tint, 0.5);
+  const liteC = darken(entry.tint, 0.32);
+
+  // base = darker tone
+  ctx.fillStyle = darkC;
+  ctx.fillRect(0, 0, W, H);
+
+  // equal-width vertical bands: ~5 lighter + ~5 dark segments, all the same
+  // size, for a clean two-tone grid
+  const band = Math.round(W / 10);
+  ctx.fillStyle = liteC;
+  for (let x = 0; x < W; x += band * 2) {
+    ctx.fillRect(x, 0, band, H);
+  }
+
+  // very light grain over everything
+  ctx.globalAlpha = 0.03;
+  ctx.fillStyle = grainPattern(ctx);
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalAlpha = 1;
+
+  // thin border
+  ctx.strokeStyle = "rgba(242,237,226,0.22)";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(20, 20, W - 40, H - 40);
+
+  return new CanvasTexture(c);
+}
+
+/** HALO plane: soft radial glow that bleeds around the card edges. */
+function makeHaloTexture(tint: string) {
+  const S = 512;
+  const c = document.createElement("canvas");
+  c.width = c.height = S;
+  const ctx = c.getContext("2d")!;
+  const g = ctx.createRadialGradient(S / 2, S / 2, S * 0.18, S / 2, S / 2, S * 0.5);
+  g.addColorStop(0, rgba(lighten(tint, 0.3), 0.55));
+  g.addColorStop(0.6, rgba(tint, 0.28));
+  g.addColorStop(1, rgba(tint, 0));
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, S, S);
+  return new CanvasTexture(c);
+}
+
+/** FRONT plane: transparent canvas holding tag, wrapped title and tech chips. */
+function makeForegroundTexture(entry: Service) {
   const W = 1024;
   const H = 640;
   const c = document.createElement("canvas");
@@ -111,72 +223,87 @@ function makeServiceTexture(entry: Service) {
   c.height = H;
   const ctx = c.getContext("2d")!;
 
-  // background: tint → near-black, diagonal
-  const grad = ctx.createLinearGradient(0, H, W, 0);
-  grad.addColorStop(0, entry.tint);
-  grad.addColorStop(1, "#14120f");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, H);
-
-  ctx.strokeStyle = "rgba(242,237,226,0.22)";
-  ctx.lineWidth = 4;
-  ctx.strokeRect(20, 20, W - 40, H - 40);
-
+  // transparent canvas — only text/chips, so it can float over the aurora
   const PAD = 72;
-  ctx.textAlign = "left";
+  const MID = W / 2;
+  ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
+  ctx.shadowColor = "rgba(0,0,0,0.55)";
+  ctx.shadowBlur = 10;
+  ctx.shadowOffsetY = 2;
 
-  // tag — mono, uppercase, warm accent
-  ctx.fillStyle = "#e8a24a";
+  // tag
+  ctx.fillStyle = "#f0b25e";
   ctx.font = "600 30px monospace";
-  ctx.fillText(entry.tag.toUpperCase().split("").join(" "), PAD, 110);
+  ctx.fillText(entry.tag.toUpperCase().split("").join(" "), MID, 130);
 
-  // title — bold, wrapped to the card width, up to 2 lines
+  // title wrapped to up to 2 lines
   ctx.fillStyle = "#f6f1e7";
   ctx.font = "800 92px system-ui, sans-serif";
-  const words = entry.label.split(" ");
-  const lines: string[] = [];
-  let line = "";
-  for (const w of words) {
-    const test = line ? `${line} ${w}` : w;
-    if (ctx.measureText(test).width > W - PAD * 2 && line) {
-      lines.push(line);
-      line = w;
-    } else {
-      line = test;
+  let lines: string[];
+  if (entry.labelLines) {
+    lines = entry.labelLines;
+  } else {
+    const words = entry.label.split(" ");
+    lines = [];
+    let line = "";
+    for (const w of words) {
+      const test = line ? `${line} ${w}` : w;
+      if (ctx.measureText(test).width > W - PAD * 2 && line) {
+        lines.push(line);
+        line = w;
+      } else {
+        line = test;
+      }
     }
+    lines.push(line);
   }
-  lines.push(line);
-  lines.forEach((ln, i) => ctx.fillText(ln, PAD, 240 + i * 96));
+  const titleTop = lines.length > 1 ? 250 : 300;
+  lines.forEach((ln, i) => ctx.fillText(ln, MID, titleTop + i * 96));
 
-  // tech chips — outlined pills wrapping across the bottom
+  // hairline + small label so the plain-language part reads apart from the title
+  ctx.strokeStyle = "rgba(246,241,231,0.18)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(W * 0.3, H - 232);
+  ctx.lineTo(W * 0.7, H - 232);
+  ctx.stroke();
+  ctx.fillStyle = "rgba(240,178,94,0.85)";
+  ctx.font = "600 22px monospace";
+  ctx.fillText("W H A T   Y O U   G E T", MID, H - 200);
+
+  // plain-language "what you get" chips
   ctx.font = "500 28px monospace";
   const chipH = 52;
   const gap = 16;
-  let cx = PAD;
-  let cy = H - 150;
-  for (const t of entry.tech) {
-    const tw = ctx.measureText(t).width;
-    const chipW = tw + 44;
-    if (cx + chipW > W - PAD) {
-      cx = PAD;
-      cy += chipH + gap;
+  const maxRow = W - PAD * 2;
+  const chips = entry.tech.map((t) => ({ t, w: ctx.measureText(t).width + 44 }));
+  const rows: { t: string; w: number }[][] = [[]];
+  let rowW = 0;
+  for (const ch of chips) {
+    if (rowW + ch.w > maxRow && rows[rows.length - 1].length) {
+      rows.push([]);
+      rowW = 0;
     }
-    ctx.strokeStyle = "rgba(246,241,231,0.45)";
-    ctx.lineWidth = 2;
-    // rounded rect
-    const r = chipH / 2;
-    ctx.beginPath();
-    ctx.moveTo(cx + r, cy);
-    ctx.arcTo(cx + chipW, cy, cx + chipW, cy + chipH, r);
-    ctx.arcTo(cx + chipW, cy + chipH, cx, cy + chipH, r);
-    ctx.arcTo(cx, cy + chipH, cx, cy, r);
-    ctx.arcTo(cx, cy, cx + chipW, cy, r);
-    ctx.closePath();
-    ctx.stroke();
-    ctx.fillStyle = "#f6f1e7";
-    ctx.fillText(t, cx + 22, cy + chipH / 2 + 10);
-    cx += chipW + gap;
+    rows[rows.length - 1].push(ch);
+    rowW += ch.w + gap;
+  }
+  let cy = H - 160;
+  for (const row of rows) {
+    const totalW = row.reduce((s, ch) => s + ch.w, 0) + gap * (row.length - 1);
+    let cx = (W - totalW) / 2;
+    for (const ch of row) {
+      ctx.strokeStyle = "rgba(246,241,231,0.55)";
+      ctx.fillStyle = "rgba(20,17,14,0.35)";
+      ctx.lineWidth = 2;
+      roundRect(ctx, cx, cy, ch.w, chipH, chipH / 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#f8f3ea";
+      ctx.fillText(ch.t, cx + ch.w / 2, cy + chipH / 2 + 10);
+      cx += ch.w + gap;
+    }
+    cy += chipH + gap;
   }
 
   return new CanvasTexture(c);
@@ -189,36 +316,85 @@ function Panel({
   index: number;
   rotation: MotionValue<number>;
 }) {
-  const mesh = useRef<Mesh>(null!);
+  const group = useRef<Group>(null!);
+  const backRef = useRef<Mesh>(null!);
+  const frontRef = useRef<Mesh>(null!);
+  const haloRef = useRef<Mesh>(null!);
+
   const geometry = useCurvedGeometry();
+  const haloGeo = useMemo(() => new PlaneGeometry(6.4, 4.5, 1, 1), []);
   const entry = SHOWCASE[index];
-  const texture = useMemo(() => makeServiceTexture(entry), [entry]);
-  const material = useMemo(
-    () =>
-      new MeshBasicMaterial({ map: texture, transparent: true, toneMapped: false }),
-    [texture]
+
+  const auroraTex = useMemo(() => makeCardTexture(entry), [entry]);
+  const fgTex = useMemo(() => makeForegroundTexture(entry), [entry]);
+  const haloTex = useMemo(() => makeHaloTexture(entry.tint), [entry]);
+
+  const backMat = useMemo(
+    () => new MeshBasicMaterial({ map: auroraTex, transparent: true, toneMapped: false }),
+    [auroraTex]
   );
+  const frontMat = useMemo(
+    () => new MeshBasicMaterial({ map: fgTex, transparent: true, toneMapped: false }),
+    [fgTex]
+  );
+  const haloMat = useMemo(
+    () =>
+      new MeshBasicMaterial({
+        map: haloTex,
+        transparent: true,
+        toneMapped: false,
+        blending: AdditiveBlending,
+        depthWrite: false,
+      }),
+    [haloTex]
+  );
+
   const dark = useMemo(() => new Color("#22201c"), []);
   const white = useMemo(() => new Color("#ffffff"), []);
 
-  useFrame(() => {
+  useFrame((state) => {
     // panel i sits at i·SPACING along an open arc; rotation slides it through
     const a = index * SPACING - rotation.get();
+    const g = group.current;
 
-    mesh.current.position.set(
-      Math.sin(a) * RADIUS * 1.28, // stretched: neighbours only ~half visible
-      -Math.sin(a) * 0.62, // diagonal: enters low from the right, exits high left
+    g.position.set(
+      Math.sin(a) * RADIUS * 1.28,
+      -Math.sin(a) * 0.62,
       (Math.cos(a) - 1) * RADIUS
     );
-    mesh.current.rotation.y = a * 1.12; // a touch more curl on the sides
+    g.rotation.y = a * 1.12;
 
     const focus = Math.max(0, 1 - Math.abs(a) / (SPACING * 0.8));
-    material.opacity = Math.abs(a) > SPACING * 2.2 ? 0 : 0.3 + focus * 0.7;
-    material.color.copy(dark).lerp(white, 0.35 + focus * 0.65);
-    mesh.current.scale.setScalar(0.8 + focus * 0.2);
+    // solid card: opaque across the visible band so the orbit behind never
+    // bleeds through the flat colour; only the outgoing card fades out
+    const edge = Math.abs(a);
+    const FADE0 = SPACING * 1.6;
+    const FADE1 = SPACING * 2.2;
+    const op = edge >= FADE1 ? 0 : edge <= FADE0 ? 1 : (FADE1 - edge) / (FADE1 - FADE0);
+    backMat.opacity = op;
+    frontMat.opacity = op;
+    haloMat.opacity = op * focus * 0.5;
+    backMat.color.copy(dark).lerp(white, 0.4 + focus * 0.6);
+    frontMat.color.copy(dark).lerp(white, 0.5 + focus * 0.5);
+    g.scale.setScalar(0.8 + focus * 0.2);
+
+    // parallax — subtle (~20% of before) and ONLY on the centre card; side
+    // cards stay put so the whole area doesn't drift
+    const pf = focus > 0.6 ? (focus - 0.6) / 0.4 : 0;
+    const px = state.pointer.x * pf;
+    const py = state.pointer.y * pf;
+    backRef.current.position.set(px * 0.028, py * 0.028, 0);
+    frontRef.current.position.set(-px * 0.02, -py * 0.02, 0.07);
+    haloRef.current.position.set(px * 0.04, py * 0.04, -0.2);
   });
 
-  return <mesh ref={mesh} geometry={geometry} material={material} />;
+  return (
+    <group ref={group}>
+      <mesh ref={haloRef} geometry={haloGeo} material={haloMat} position={[0, 0, -0.2]} />
+      <mesh ref={backRef} geometry={geometry} material={backMat} />
+      <mesh ref={frontRef} geometry={geometry} material={frontMat} position={[0, 0, 0.07]} scale={[0.985, 0.985, 1]} />
+    </group>
+  );
 }
 
 function Ring({ rotation }: { rotation: MotionValue<number> }) {
@@ -389,7 +565,13 @@ export function ShowcaseSection() {
                 {entry.tag}
               </span>
               <h2 className="font-display mt-2 text-[clamp(1.8rem,4vw,3.4rem)] font-extrabold uppercase leading-none">
-                {entry.label}
+                {entry.labelLines
+                  ? entry.labelLines.map((ln, i) => (
+                      <span key={ln} className={i > 0 ? "block" : undefined}>
+                        {ln}
+                      </span>
+                    ))
+                  : entry.label}
               </h2>
               <p className="mt-2 max-w-[50ch] text-small text-ink-soft">
                 {entry.metric}

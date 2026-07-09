@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { Reveal } from "@/components/Reveal";
 import { KineticTitle } from "@/components/KineticTitle";
@@ -128,17 +129,28 @@ export default function Home() {
                 </p>
               </Reveal>
               <Reveal delay={0.4}>
-                <Magnetic className="mt-8">
-                  <a
-                    href="https://mail.google.com/mail/?view=cm&fs=1&to=justutsav.05@gmail.com&su=Something%20that%20should%20exist"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    data-cursor-label="email"
-                    className="inline-block rounded-full bg-accent px-8 py-4 font-mono text-small uppercase tracking-widest text-[var(--paper)] transition-colors duration-300 hover:bg-accent-deep"
-                  >
-                    justutsav.05@gmail.com
-                  </a>
-                </Magnetic>
+                <div className="mt-8 flex flex-wrap items-center gap-4">
+                  <Magnetic>
+                    <a
+                      href="https://mail.google.com/mail/?view=cm&fs=1&to=justutsav.05@gmail.com&su=Something%20that%20should%20exist"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-cursor-label="email"
+                      className="inline-block rounded-full bg-accent px-8 py-4 font-mono text-small uppercase tracking-widest text-[var(--paper)] transition-colors duration-300 hover:bg-accent-deep"
+                    >
+                      justutsav.05@gmail.com
+                    </a>
+                  </Magnetic>
+                  <Magnetic>
+                    <Link
+                      href="/about"
+                      data-cursor-label="about"
+                      className="inline-block rounded-full border border-ink/25 px-8 py-4 font-mono text-small uppercase tracking-widest text-ink transition-colors duration-300 hover:border-ink hover:bg-ink hover:text-[var(--paper)]"
+                    >
+                      View about me →
+                    </Link>
+                  </Magnetic>
+                </div>
               </Reveal>
             </div>
 

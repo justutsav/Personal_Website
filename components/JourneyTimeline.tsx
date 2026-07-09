@@ -174,24 +174,30 @@ function Node({
   chapter,
   index,
   active,
+  scale,
   onOpen,
 }: {
   chapter: Chapter;
   index: number;
   active: boolean;
+  /** ≥1 above 1920px so the timeline scales like everything else (1080p base) */
+  scale: number;
   onOpen: () => void;
 }) {
   const reduce = useReducedMotion();
   const up = chapter.side === "up";
   const c = col(chapter.accent);
-  const left = PAD_L + index * GAP;
+  const left = (PAD_L + index * GAP) * scale;
+  const stem = 52 * scale;
+  const cardTop = 214 * scale; // teaser height above the line for "up" cards
+  const dot = 15 * scale;
 
   return (
-    <div className="absolute top-1/2" style={{ left, width: CARD_W, transform: "translateX(-50%)" }}>
+    <div className="absolute top-1/2" style={{ left, width: CARD_W * scale, transform: "translateX(-50%)" }}>
       {/* stem */}
       <motion.div
         className="absolute left-1/2 w-px -translate-x-1/2"
-        style={{ background: c, height: 52, top: up ? -52 : 0 }}
+        style={{ background: c, height: stem, top: up ? -stem : 0 }}
         initial={reduce ? undefined : { scaleY: 0 }}
         whileInView={{ scaleY: 1 }}
         viewport={{ once: true }}
@@ -199,8 +205,10 @@ function Node({
       />
       {/* dot */}
       <motion.span
-        className="absolute left-1/2 top-0 h-[15px] w-[15px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2"
+        className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full border-2"
         style={{
+          width: dot,
+          height: dot,
           borderColor: c,
           backgroundColor: chapter.spine ? c : "var(--paper)",
           boxShadow: active ? `0 0 0 6px ${c}22` : "none",
@@ -219,7 +227,7 @@ function Node({
         className="group absolute w-full cursor-pointer overflow-hidden rounded-2xl border bg-paper-raised text-left"
         style={{
           borderColor: active ? c : "var(--line)",
-          top: up ? -52 - 214 : 52,
+          top: up ? -stem - cardTop : stem,
           boxShadow: active ? `0 18px 44px ${c}22` : "0 8px 24px rgba(0,0,0,0.28)",
         }}
         initial={reduce ? undefined : { opacity: 0, y: up ? -20 : 20 }}
@@ -331,7 +339,14 @@ export function JourneyTimeline() {
   const [open, setOpen] = useState<number | null>(null);
   const [active, setActive] = useState(0);
 
-  const trackW = PAD_L + (CHAPTERS.length - 1) * GAP + PAD_R;
+  // 1080p (1920px) is the design base; above it, scale the fixed-px timeline
+  // layout with the viewport so cards/spacing keep the same proportion the way
+  // the rem-based UI does. At/below 1920 scale is 1 → nothing changes.
+  const scale = Math.max(1, vw / 1920);
+  const gap = GAP * scale;
+  const padL = PAD_L * scale;
+  const padR = PAD_R * scale;
+  const trackW = padL + (CHAPTERS.length - 1) * gap + padR;
   const maxX = Math.max(0, trackW - vw);
 
   useEffect(() => {
@@ -375,7 +390,7 @@ export function JourneyTimeline() {
     let best = 0;
     let bestD = Infinity;
     for (let i = 0; i < CHAPTERS.length; i++) {
-      const center = Math.min(1, Math.max(0, (PAD_L + i * GAP - vw / 2) / maxX));
+      const center = Math.min(1, Math.max(0, (padL + i * gap - vw / 2) / maxX));
       const d = Math.abs(pAdj - center);
       if (d < bestD) {
         bestD = d;
@@ -555,9 +570,9 @@ export function JourneyTimeline() {
                 <stop offset="1" stopColor="var(--accent-2)" />
               </linearGradient>
             </defs>
-            <path d={wavyPath(trackW)} stroke="var(--line)" strokeWidth="2" fill="none" />
+            <path d={wavyPath(trackW, gap)} stroke="var(--line)" strokeWidth="2" fill="none" />
             <motion.path
-              d={wavyPath(trackW)}
+              d={wavyPath(trackW, gap)}
               stroke="url(#tl-grad)"
               strokeWidth="3"
               fill="none"
@@ -566,7 +581,7 @@ export function JourneyTimeline() {
           </svg>
 
           {CHAPTERS.map((c, i) => (
-            <Node key={c.title} chapter={c} index={i} active={active === i} onOpen={() => setOpen(i)} />
+            <Node key={c.title} chapter={c} index={i} active={active === i} scale={scale} onOpen={() => setOpen(i)} />
           ))}
         </motion.div>
 
@@ -616,10 +631,9 @@ export function JourneyTimeline() {
   );
 }
 
-function wavyPath(width: number) {
+function wavyPath(width: number, seg: number = GAP) {
   const mid = 100;
   const amp = 22;
-  const seg = GAP;
   let d = `M 0 ${mid}`;
   for (let xx = 0; xx < width; xx += seg) {
     const cx1 = xx + seg * 0.25;

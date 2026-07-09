@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { Magnetic } from "@/components/Magnetic";
+import { useMusic } from "@/components/MusicProvider";
 
 const links = [
   { href: "/#work", label: "Work" },
@@ -13,6 +14,38 @@ const links = [
   { href: "/about", label: "About" },
   { href: "/#contact", label: "Contact" },
 ];
+
+/**
+ * Sound-bars toggle. Appears once Selected Work has been reached (persists via
+ * MusicProvider), then stays in the nav everywhere. Click pauses/resumes the
+ * music; the bars freeze when paused.
+ */
+function MusicToggle() {
+  const { reached, active, paused, togglePaused } = useMusic();
+  if (!reached) return null;
+  return (
+    <button
+      onClick={togglePaused}
+      aria-label={paused ? "Play music" : "Pause music"}
+      data-cursor-label={paused ? "play" : "pause"}
+      className="flex h-4 items-end gap-[2.5px] text-ink-soft transition-colors hover:text-accent"
+    >
+      {[0, 1, 2, 3].map((i) => (
+        <motion.span
+          key={i}
+          className="h-4 w-[3px] rounded-full bg-current"
+          style={{ transformOrigin: "bottom" }}
+          animate={active ? { scaleY: [0.35, 1, 0.5, 0.85, 0.4] } : { scaleY: 0.3 }}
+          transition={
+            active
+              ? { duration: 0.85 + i * 0.18, repeat: Infinity, ease: "easeInOut" }
+              : { duration: 0.3 }
+          }
+        />
+      ))}
+    </button>
+  );
+}
 
 /**
  * Compact fixed nav: hides when scrolling down, returns on the first
@@ -65,34 +98,45 @@ export function Nav() {
       <nav className="flex items-center justify-between py-2.5">
         <Link
           href="/"
-          className="group flex items-center gap-2.5 font-display text-base tracking-tight"
+          // sized to match the nav links (same clamp) — inline because the
+          // token/arbitrary text utilities don't emit in this project
+          style={{ fontSize: "clamp(0.9rem, 1.4vw, 1.30rem)" }}
+          className="group flex items-center gap-2.5 font-display tracking-tight"
         >
           <Image
             src="/avatar.png"
             alt="Utsav"
-            width={26}
-            height={26}
+            width={34}
+            height={34}
+            style={{ width: "clamp(30px, 2.2vw, 40px)", height: "clamp(30px, 2.2vw, 40px)" }}
             className="rounded-full border border-line"
           />
           <span className="hidden transition-colors duration-200 group-hover:text-accent sm:inline">
             Utsav
           </span>
         </Link>
-        <ul className="flex gap-4 sm:gap-6">
-          {links.map((l) => (
-            <li key={l.href}>
-              <Magnetic strength={0.5}>
-                <Link
-                  href={l.href}
-                  onClick={(e) => onHashClick(e, l.href)}
-                  className="font-mono text-micro uppercase tracking-wide text-ink-soft transition-colors duration-200 hover:text-accent sm:tracking-widest"
-                >
-                  {l.label}
-                </Link>
-              </Magnetic>
-            </li>
-          ))}
-        </ul>
+        <div className="flex items-center gap-3 sm:gap-5">
+          <ul className="flex gap-3 sm:gap-6">
+            {links.map((l) => (
+              <li key={l.href}>
+                <Magnetic strength={0.5}>
+                  <Link
+                    href={l.href}
+                    onClick={(e) => onHashClick(e, l.href)}
+                    // inline font-size: this project's Tailwind doesn't emit the
+                    // text-micro / text-[Xrem] token utilities, so classes were
+                    // no-ops. clamp → smaller on mobile, larger on desktop.
+                    style={{ fontSize: "clamp(0.9rem, 1.4vw, 1.30rem)" }}
+                    className="font-mono uppercase tracking-wide text-ink-soft transition-colors duration-200 hover:text-accent sm:tracking-widest"
+                  >
+                    {l.label}
+                  </Link>
+                </Magnetic>
+              </li>
+            ))}
+          </ul>
+          <MusicToggle />
+        </div>
       </nav>
     </motion.header>
   );

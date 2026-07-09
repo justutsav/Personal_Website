@@ -127,6 +127,9 @@ function DeckCard({
   // these covers read better whole — show the full image (letterboxed in the
   // same 4:3 box) instead of top-cropping
   const coverContain = slug === "zentry-clone" || slug === "astro-ai";
+  // landscape screenshots read better stacked whole than cropped into vertical
+  // tiles — zentry's shots are 16:9
+  const stackShots = slug === "zentry-clone";
 
   const head = (p: number) => {
     const pp = Math.min(p / SETTLE, 1); // reserve a scroll tail after the last card
@@ -159,7 +162,7 @@ function DeckCard({
   return (
     <motion.article
       onClick={() => router.push(`/work/${slug}`)}
-      data-cursor-label="view"
+      data-cursor-label="click"
       style={{
         backgroundColor: pal.bg,
         color: pal.ink,
@@ -181,10 +184,10 @@ function DeckCard({
           {project.category} · {project.year}
         </span>
         <span
-          className="hidden shrink-0 items-center gap-2 rounded-full border px-5 py-2 font-mono text-micro uppercase tracking-widest sm:inline-flex"
-          style={{ borderColor: pal.soft, color: pal.ink }}
+          className="shrink-0 font-mono text-small uppercase tracking-[0.25em]"
+          style={{ color: pal.soft }}
         >
-          View case study → &nbsp;·&nbsp;{String(index + 1).padStart(2, "0")}/{String(total).padStart(2, "0")}
+          {String(index + 1).padStart(2, "0")}/{String(total).padStart(2, "0")}
         </span>
       </div>
 
@@ -209,24 +212,43 @@ function DeckCard({
             ))}
           </dl>
 
-          {/* small image row — three identical 4:5 tiles on every card,
-              cropped from the top of each screenshot. The absolute-inset
-              wrapper gives the row a DEFINITE height so the tiles size from
-              it (h-full + aspect) and can never overflow the card bottom */}
+          {/* small image row. Default: three 4:5 tiles side-by-side, top-cropped.
+              Landscape decks (zentry) instead stack the whole 16:9 shots one
+              below the other, centered and a touch larger. The absolute-inset
+              wrapper gives the area a DEFINITE height so nothing overflows. */}
           <div className="relative mt-6 min-h-0 flex-1">
-            <div className="absolute inset-0 flex items-center gap-4">
-              {[1, 2, 3].map((n) => (
-                <Media
-                  key={n}
-                  src={`/projects/${slug}/0${n}.webp`}
-                  label={`shot ${n}`}
-                  ink={pal.ink}
-                  className="h-full max-w-[31.5%] shrink-0"
-                  style={{ aspectRatio: "4 / 5" }}
-                  crop
-                />
-              ))}
-            </div>
+            {stackShots ? (
+              // 2×2 grid of whole 16:9 shots; the 4th slot is left intentionally
+              // empty (a photo drops in later as 04) — nothing rendered there
+              <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-3">
+                {[1, 2, 3].map((n) => (
+                  <div key={n} className="flex items-center justify-center overflow-hidden">
+                    <Media
+                      src={`/projects/${slug}/0${n}.webp`}
+                      label={`shot ${n}`}
+                      ink={pal.ink}
+                      className="max-h-full w-full"
+                      style={{ aspectRatio: "16 / 9" }}
+                    />
+                  </div>
+                ))}
+                <div aria-hidden />
+              </div>
+            ) : (
+              <div className="absolute inset-0 flex items-center gap-4">
+                {[1, 2, 3].map((n) => (
+                  <Media
+                    key={n}
+                    src={`/projects/${slug}/0${n}.webp`}
+                    label={`shot ${n}`}
+                    ink={pal.ink}
+                    className="h-full max-w-[31.5%] shrink-0"
+                    style={{ aspectRatio: "4 / 5" }}
+                    crop
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -264,6 +286,17 @@ function DeckCard({
             </div>
           </div>
         </div>
+      </div>
+
+      {/* footer: view case study lives bottom-right, number sits top-right.
+          Styled as a clear pill button (mirrors "view about me"), palette-aware. */}
+      <div className="mt-4 flex justify-end">
+        <span
+          className="hidden shrink-0 items-center gap-2 rounded-full border-2 px-7 py-3 font-mono text-small uppercase tracking-widest sm:inline-flex"
+          style={{ borderColor: pal.ink, color: pal.ink }}
+        >
+          View case study →
+        </span>
       </div>
     </motion.article>
   );
@@ -381,9 +414,12 @@ export function WorkShowcase({
                     </div>
                   ))}
                 </dl>
-                <p className="mt-4 font-mono text-micro uppercase tracking-widest" style={{ color: pal.soft }}>
+                <span
+                  className="mt-4 inline-flex items-center gap-2 rounded-full border-2 px-5 py-2.5 font-mono text-micro uppercase tracking-widest"
+                  style={{ borderColor: pal.ink, color: pal.ink }}
+                >
                   View case study →
-                </p>
+                </span>
               </article>
             );
           })}

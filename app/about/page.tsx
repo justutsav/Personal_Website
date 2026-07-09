@@ -47,6 +47,11 @@ const credits: { group: string; items: CreditItem[] }[] = [
         href: "https://www.youtube.com/watch?v=pBkHHoOIIn8",
       },
       {
+        title: "Rasputin",
+        by: "Boney M.",
+        href: "https://www.youtube.com/watch?v=MkG1J5SZ_kw",
+      },
+      {
         title: "End of Beginning",
         by: "Djo",
         href: "https://www.youtube.com/watch?v=xy3AcmW0lrQ",
