@@ -77,6 +77,9 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   pausedRef.current = paused;
   const inZoneRef = useRef(inZone);
   inZoneRef.current = inZone;
+  // true while playback is paused solely because the tab is hidden — lets us
+  // auto-resume on return without touching the user's manual `paused` state
+  const pausedByHiddenRef = useRef(false);
 
   const track = TRACKS[idx];
   const active = started && !paused;
@@ -228,6 +231,28 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener("keydown", onGesture);
       document.removeEventListener("touchstart", onGesture);
     };
+  }, []);
+
+  // leave the tab → pause the music; come back → resume it. Only touches
+  // playback that was actually sounding, and never overrides a manual pause.
+  useEffect(() => {
+    const onVisibility = () => {
+      const a = audioRef.current;
+      if (!a) return;
+      if (document.hidden) {
+        if (startedRef.current && !pausedRef.current && !a.paused) {
+          a.pause();
+          pausedByHiddenRef.current = true;
+        }
+      } else if (pausedByHiddenRef.current) {
+        pausedByHiddenRef.current = false;
+        if (startedRef.current && !pausedRef.current) {
+          playTo(inZoneRef.current ? TARGET_VOL : LOW_VOL, IN_FADE);
+        }
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
   }, []);
 
   const changeTrack = (dir: number) => {
