@@ -11,8 +11,9 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
+import { COARSE_QUERY, useMediaQuery } from "@/components/useMediaQuery";
 
-const roles = ["WEB APPS", "DASHBOARDS", "MOBILE APPS", "AUTOMATION", "AI TOOLS"];
+const roles = ["WEBSITES", "DASHBOARDS", "MOBILE APPS", "AI AUTOMATION", "CUSTOM TOOLS"];
 
 /**
  * Hero media pool. Drop videos/photos into public/assests/hero/ and add
@@ -116,6 +117,9 @@ function MediaLayer({
  */
 export function HeroExperience() {
   const reduce = useReducedMotion();
+  // touch devices: no real hover — kill the cursor tilt + next-clip lens peek
+  // (they misfire on synthesized touch events). Tap-to-advance still works.
+  const coarse = useMediaQuery(COARSE_QUERY);
 
   /* rotating role word */
   const [role, setRole] = useState(0);
@@ -223,9 +227,9 @@ export function HeroExperience() {
           <motion.div
             ref={cardRef}
             onClick={() => advance(1)}
-            onMouseEnter={() => setHovering(true)}
-            onMouseMove={onMove}
-            onMouseLeave={onLeave}
+            onMouseEnter={coarse ? undefined : () => setHovering(true)}
+            onMouseMove={coarse ? undefined : onMove}
+            onMouseLeave={coarse ? undefined : onLeave}
             className="group relative w-[88vw] cursor-pointer overflow-hidden md:w-[min(60vw,44rem)]"
             style={{
               rotateX,
@@ -252,7 +256,7 @@ export function HeroExperience() {
           </AnimatePresence>
 
           {/* lens: next clip's first frame revealed around the cursor */}
-          {!reduce && (
+          {!reduce && !coarse && (
             <motion.div
               className="absolute inset-0"
               style={{
@@ -353,6 +357,25 @@ export function HeroExperience() {
           </motion.div>
         </div>
       </motion.div>
+
+      {/* hint: the frame is interactive — click to cycle clips */}
+      <motion.p
+        className="relative mt-5 flex items-center gap-2 font-mono uppercase text-ink-soft"
+        style={{ fontSize: "clamp(0.58rem,1.1vw,0.72rem)", letterSpacing: "0.28em" }}
+        initial={reduce ? false : { opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.9, duration: 0.7 }}
+      >
+        <motion.span
+          aria-hidden
+          className="text-accent-2"
+          animate={reduce ? undefined : { rotate: 360 }}
+          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+        >
+          ↻
+        </motion.span>
+        Give the video a tap
+      </motion.p>
 
       {/* tagline below the card, outside the box */}
       <div className="relative mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 text-center font-mono text-[clamp(0.72rem,1.4vw,1.1rem)] uppercase tracking-[0.18em] md:tracking-[0.25em]">

@@ -72,6 +72,33 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     }
     const lenis = lenisRef.current;
     if (!lenis) return;
+
+    // Case study "Back" → re-seat the deck at the exact card the user opened
+    // from. "work:restore" holds either a pixel scrollY or the sentinel "work"
+    // (scroll to the Selected Work section top). Consume once; two passes cover
+    // the height settling as the home content mounts.
+    let restore: string | null = null;
+    try {
+      restore = sessionStorage.getItem("work:restore");
+      if (restore != null) sessionStorage.removeItem("work:restore");
+    } catch {
+      /* storage blocked */
+    }
+    if (restore != null) {
+      const apply = () => {
+        lenis.resize();
+        if (restore === "work") {
+          const el = document.getElementById("work");
+          if (el) lenis.scrollTo(el as HTMLElement, { offset: -72, immediate: true });
+        } else {
+          lenis.scrollTo(parseInt(restore as string, 10), { immediate: true });
+        }
+      };
+      requestAnimationFrame(apply);
+      const rt = window.setTimeout(apply, 220);
+      return () => window.clearTimeout(rt);
+    }
+
     if (!window.location.hash) lenis.scrollTo(0, { immediate: true });
     // the new page's content (images, media) can change height after mount —
     // recompute Lenis's scroll limit so the footer / "Next case" past the

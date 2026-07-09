@@ -24,7 +24,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Utsav — software that ships and gets used",
+  title: "Utsav",
   description:
     "Independent developer building web apps, dashboards, mobile apps and automation. Work in production managing ₹75L+ for real businesses.",
   metadataBase: new URL("https://justutsav.com"),

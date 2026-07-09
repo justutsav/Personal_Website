@@ -24,3 +24,8 @@ export function useMediaQuery(query: string) {
 /** Below Tailwind's `md` breakpoint — the scroll-theatre sections swap to
  * their swipe-native mobile presentations here. */
 export const MOBILE_QUERY = "(max-width: 767px)";
+
+/** Touch / no-hover devices. Mouse-driven effects (magnetic pull, cursor
+ * tilt, hover peek) are pointless here and misfire on synthesized touch
+ * events — gate them off with this. */
+export const COARSE_QUERY = "(pointer: coarse)";

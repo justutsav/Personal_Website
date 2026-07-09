@@ -368,7 +368,7 @@ export function JourneyTimeline() {
     useTransform(scrollYProgress, [0, 0.6, 0.97], [0, -maxX, -maxX - 1400]),
     { stiffness: 120, damping: 28, mass: 0.6 }
   );
-  const draw = useTransform(scrollYProgress, [0.04, 0.54], [0, 1]);
+  const draw = useTransform(scrollYProgress, [0.04, 0.62], [0, 1]);
   const ghostX = useTransform(scrollYProgress, [0, 0.6, 0.97], [60, -160, -300]);
 
   // outro screen: after the last branch, grows from ZERO at the right edge to
@@ -496,7 +496,7 @@ export function JourneyTimeline() {
   }
 
   return (
-    <section id="journey" ref={sectionRef} className="relative -mt-[35vh] bg-paper" style={{ height: `${heightVh}vh` }}>
+    <section id="journey" ref={sectionRef} className="relative -mt-[59vh] bg-paper" style={{ height: `${heightVh}vh` }}>
       <div className="sticky top-0 h-screen overflow-hidden">
         {/* drifting ghost year */}
         <motion.div

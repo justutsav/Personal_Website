@@ -5,6 +5,7 @@ import { Nav } from "@/components/Nav";
 import { Reveal } from "@/components/Reveal";
 import { KineticTitle } from "@/components/KineticTitle";
 import { CaseGallery } from "@/components/CaseGallery";
+import { CaseBack } from "@/components/CaseBack";
 import { projects } from "@/data/projects";
 
 export function generateStaticParams() {
@@ -49,9 +50,12 @@ export default async function CaseStudy({
         {/* ---- Case header ---- */}
         <header className="pt-[10vh] pb-16">
           <Reveal>
-            <p className="font-mono text-micro uppercase tracking-[0.2em] text-accent mb-6">
-              {project.category} · {project.year}
-            </p>
+            <div className="mb-6 flex items-center gap-4">
+              <CaseBack />
+              <p className="font-mono text-micro uppercase tracking-[0.2em] text-accent">
+                {project.category} · {project.year}
+              </p>
+            </div>
           </Reveal>
           <KineticTitle
             text={project.name}

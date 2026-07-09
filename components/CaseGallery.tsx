@@ -37,6 +37,16 @@ export function CaseGallery({ slug, name }: { slug: string; name: string }) {
     ];
   });
 
+  // projects whose shots are all peers (no hero) render as one even grid
+  const EQUAL_GRID = new Set(["wpm-overlay"]);
+  // the hero is cover.* — pull it to the front so it becomes the left "main"
+  const coverIdx = items.findIndex((it) => /\/cover\.[a-z0-9]+$/i.test(it.src));
+  const ordered =
+    coverIdx > 0
+      ? [items[coverIdx], ...items.slice(0, coverIdx), ...items.slice(coverIdx + 1)]
+      : items;
+  const equal = EQUAL_GRID.has(slug) || coverIdx === -1;
+
   if (items.length === 0) {
     return (
       <figure className="my-16 border border-line rounded-sm aspect-[16/10] flex items-center justify-center bg-paper-raised">
@@ -52,5 +62,5 @@ export function CaseGallery({ slug, name }: { slug: string; name: string }) {
     );
   }
 
-  return <CaseGalleryGrid items={items} />;
+  return <CaseGalleryGrid items={ordered} equal={equal} />;
 }

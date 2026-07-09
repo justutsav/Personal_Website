@@ -7,6 +7,7 @@ import {
   useSpring,
   useReducedMotion,
 } from "framer-motion";
+import { COARSE_QUERY, useMediaQuery } from "@/components/useMediaQuery";
 
 /** Wrapper that pulls its child toward the cursor while hovered. */
 export function Magnetic({
@@ -19,13 +20,15 @@ export function Magnetic({
   className?: string;
 }) {
   const reduce = useReducedMotion();
+  const coarse = useMediaQuery(COARSE_QUERY);
   const ref = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const sx = useSpring(x, { stiffness: 200, damping: 15 });
   const sy = useSpring(y, { stiffness: 200, damping: 15 });
 
-  if (reduce) return <div className={className}>{children}</div>;
+  // touch / no-hover devices: no cursor to chase → render plain, no pull
+  if (reduce || coarse) return <div className={className}>{children}</div>;
 
   return (
     <motion.div

@@ -192,9 +192,20 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     const onGesture = () => {
       const a = audioRef.current;
       if (!a) return;
-      if (startedRef.current && !pausedRef.current) {
-        if (a.paused) playTo(inZoneRef.current ? TARGET_VOL : LOW_VOL, IN_FADE);
-      } else if (a.paused) {
+      if (startedRef.current) {
+        // playback already began this session — NEVER re-prime or reset
+        // currentTime (that would rewind on a pause→play tap, since pointerdown
+        // fires before the click's togglePaused). If we should be sounding but
+        // a programmatic play() was blocked, resume from the CURRENT position.
+        if (!pausedRef.current && a.paused) {
+          playTo(inZoneRef.current ? TARGET_VOL : LOW_VOL, IN_FADE);
+        }
+        return;
+      }
+      // first-ever gesture, before any playback: silently prime the element so
+      // a later play() is allowed by autoplay policy, then rewind (nothing has
+      // played yet).
+      if (a.paused) {
         const v = a.volume;
         a.muted = true;
         a.play()

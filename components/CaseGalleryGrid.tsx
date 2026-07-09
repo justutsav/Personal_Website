@@ -18,7 +18,14 @@ export type GalleryItem = {
  * Clicking any tile opens it full-screen; ← → arrows step through, Esc or
  * a click anywhere closes.
  */
-export function CaseGalleryGrid({ items }: { items: GalleryItem[] }) {
+export function CaseGalleryGrid({
+  items,
+  equal = false,
+}: {
+  items: GalleryItem[];
+  /** true → all shots are peers (no hero): one even grid, all same level */
+  equal?: boolean;
+}) {
   const [open, setOpen] = useState<number | null>(null);
 
   const step = useCallback(
@@ -44,48 +51,73 @@ export function CaseGalleryGrid({ items }: { items: GalleryItem[] }) {
 
   return (
     <>
-      <div className="my-16 space-y-5">
-        {/* main shot — its own line, never taller than half the screen */}
-        <button
-          type="button"
-          onClick={() => setOpen(0)}
-          data-cursor-label="zoom"
-          className="group block w-full cursor-zoom-in"
-        >
-          <Image
-            src={items[0].src}
-            alt={items[0].alt}
-            width={items[0].width}
-            height={items[0].height}
-            sizes="(min-width: 768px) 70vw, 100vw"
-            className="mx-auto h-auto max-h-[50vh] w-auto rounded-lg border border-line object-contain transition-transform duration-500 group-hover:scale-[1.01]"
-          />
-        </button>
-
-        {/* the rest, grouped together and small */}
-        {items.length > 1 && (
-          <div className="flex flex-wrap justify-center gap-4">
-            {items.slice(1).map((img, i) => (
-              <button
-                key={img.src}
-                type="button"
-                onClick={() => setOpen(i + 1)}
-                data-cursor-label="zoom"
-                className="group cursor-zoom-in overflow-hidden rounded-lg border border-line transition-colors duration-200 hover:border-accent"
-              >
-                <Image
-                  src={img.src}
-                  alt={img.alt}
-                  width={img.width}
-                  height={img.height}
-                  sizes="(min-width: 768px) 30vw, 45vw"
-                  className="h-auto max-h-[28vh] w-auto object-contain transition-transform duration-500 group-hover:scale-[1.02]"
-                />
-              </button>
-            ))}
+      {equal ? (
+        // no hero — every shot a peer, one even row (4-across on desktop)
+        <div className="my-16 grid grid-cols-2 gap-4 md:grid-cols-4">
+          {items.map((img, i) => (
+            <button
+              key={img.src}
+              type="button"
+              onClick={() => setOpen(i)}
+              data-cursor-label="zoom"
+              className="group flex cursor-zoom-in items-center justify-center overflow-hidden rounded-lg border border-line transition-colors duration-200 hover:border-accent"
+            >
+              <Image
+                src={img.src}
+                alt={img.alt}
+                width={img.width}
+                height={img.height}
+                sizes="(min-width: 768px) 24vw, 45vw"
+                className="h-auto max-h-[34vh] w-full object-contain transition-transform duration-500 group-hover:scale-[1.02]"
+              />
+            </button>
+          ))}
+        </div>
+      ) : (
+        // main hero on the LEFT, a faint divider, the rest gridded on the RIGHT
+        <div className="my-16 flex flex-col gap-8 md:flex-row md:gap-0">
+          <div className="md:flex-1 md:pr-8">
+            <button
+              type="button"
+              onClick={() => setOpen(0)}
+              data-cursor-label="zoom"
+              className="group block w-full cursor-zoom-in"
+            >
+              <Image
+                src={items[0].src}
+                alt={items[0].alt}
+                width={items[0].width}
+                height={items[0].height}
+                sizes="(min-width: 768px) 50vw, 100vw"
+                className="h-auto max-h-[62vh] w-full rounded-lg border border-line object-contain transition-transform duration-500 group-hover:scale-[1.01]"
+              />
+            </button>
           </div>
-        )}
-      </div>
+
+          {items.length > 1 && (
+            <div className="grid grid-cols-2 content-start gap-4 md:flex-1 md:border-l md:border-line md:pl-8">
+              {items.slice(1).map((img, i) => (
+                <button
+                  key={img.src}
+                  type="button"
+                  onClick={() => setOpen(i + 1)}
+                  data-cursor-label="zoom"
+                  className="group flex cursor-zoom-in items-center justify-center overflow-hidden rounded-lg border border-line transition-colors duration-200 hover:border-accent"
+                >
+                  <Image
+                    src={img.src}
+                    alt={img.alt}
+                    width={img.width}
+                    height={img.height}
+                    sizes="(min-width: 768px) 24vw, 45vw"
+                    className="h-auto max-h-[30vh] w-full object-contain transition-transform duration-500 group-hover:scale-[1.02]"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <AnimatePresence>
         {open !== null && (

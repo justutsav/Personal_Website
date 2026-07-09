@@ -11,6 +11,7 @@ import {
 } from "framer-motion";
 import type { Project } from "@/data/projects";
 import { MOBILE_QUERY, useMediaQuery } from "@/components/useMediaQuery";
+import { Magnetic } from "@/components/Magnetic";
 
 /* ---------- punchy per-project palette ---------- */
 
@@ -33,6 +34,16 @@ const PALETTES: Record<string, Palette> = {
   justfinance: { bg: "#2b3b8f", ink: "#eef2ff", soft: "rgba(238,242,255,0.7)" },
 };
 const FALLBACK: Palette = { bg: "#2b2b2b", ink: "#ffffff", soft: "rgba(255,255,255,0.7)" };
+
+/** Remember where the deck was scrolled to so a case study's Back button can
+ * re-seat the user on the exact card they opened (see CaseBack). */
+function rememberReturn() {
+  try {
+    sessionStorage.setItem("work:returnY", String(window.scrollY));
+  } catch {
+    /* storage blocked — Back falls back to the section top */
+  }
+}
 
 /* ---------- deck tuning knobs ----------
  * Adjust the feel of the card stack here.
@@ -124,6 +135,10 @@ function DeckCard({
   const router = useRouter();
   const pal = PALETTES[project.slug] ?? FALLBACK;
   const slug = project.slug;
+  // hover state drives the button's invert (white bg + card-colour text) — a
+  // static hover: class can't pick the per-card palette, and dark-ink cards
+  // would vanish if we kept the ink colour on a white fill
+  const [btnHover, setBtnHover] = useState(false);
   // these covers read better whole — show the full image (letterboxed in the
   // same 4:3 box) instead of top-cropping
   const coverContain = slug === "zentry-clone" || slug === "astro-ai";
@@ -161,7 +176,10 @@ function DeckCard({
 
   return (
     <motion.article
-      onClick={() => router.push(`/work/${slug}`)}
+      onClick={() => {
+        rememberReturn();
+        router.push(`/work/${slug}`);
+      }}
       data-cursor-label="click"
       style={{
         backgroundColor: pal.bg,
@@ -288,15 +306,29 @@ function DeckCard({
         </div>
       </div>
 
-      {/* footer: view case study lives bottom-right, number sits top-right.
-          Styled as a clear pill button (mirrors "view about me"), palette-aware. */}
+      {/* footer: a real magnetic button (mirrors the contact-page buttons).
+          Bottom-right; inverts to a white fill on hover, palette-aware text. */}
       <div className="mt-4 flex justify-end">
-        <span
-          className="hidden shrink-0 items-center gap-2 rounded-full border-2 px-7 py-3 font-mono text-small uppercase tracking-widest sm:inline-flex"
-          style={{ borderColor: pal.ink, color: pal.ink }}
-        >
-          View case study →
-        </span>
+        <Magnetic>
+          <button
+            onClick={(e) => {
+              e.stopPropagation(); // own the nav so the card's handler doesn't double-fire
+              rememberReturn();
+              router.push(`/work/${slug}`);
+            }}
+            onMouseEnter={() => setBtnHover(true)}
+            onMouseLeave={() => setBtnHover(false)}
+            data-cursor-label="open"
+            className="hidden shrink-0 items-center gap-2 rounded-full border-2 px-7 py-3 font-mono text-small uppercase tracking-widest transition-colors duration-300 sm:inline-flex"
+            style={{
+              borderColor: btnHover ? "#ffffff" : pal.ink,
+              backgroundColor: btnHover ? "#ffffff" : "transparent",
+              color: btnHover ? pal.bg : pal.ink,
+            }}
+          >
+            View case study →
+          </button>
+        </Magnetic>
       </div>
     </motion.article>
   );
@@ -379,7 +411,10 @@ export function WorkShowcase({
             return (
               <article
                 key={p.slug}
-                onClick={() => router.push(`/work/${p.slug}`)}
+                onClick={() => {
+                  rememberReturn();
+                  router.push(`/work/${p.slug}`);
+                }}
                 className="cursor-pointer overflow-hidden rounded-2xl p-5"
                 style={{ backgroundColor: pal.bg, color: pal.ink }}
               >
