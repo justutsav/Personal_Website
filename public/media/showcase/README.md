@@ -7,7 +7,7 @@ Drop videos (or photos) here named by slot:
     03.mp4  JustFinance
     04.mp4  Grit
     05.mp4  SplitFree
-    06.mp4  Astro AI
+    06.mp4  Astro
     07.mp4  JustWhisper
     08.mp4  WPM Overlay
 

@@ -28,7 +28,7 @@ const PALETTES: Record<string, Palette> = {
   grit: { bg: "#e8a11c", ink: "#241606", soft: "rgba(36,22,6,0.72)" },
   "zentry-clone": { bg: "#dfdff0", ink: "#1a1330", soft: "rgba(26,19,48,0.7)" },
   "atul-finance": { bg: "#2833bd", ink: "#eef1ff", soft: "rgba(238,241,255,0.72)" },
-  "astro-ai": { bg: "#5a2b86", ink: "#f6ecff", soft: "rgba(246,236,255,0.74)" },
+  astro: { bg: "#5a2b86", ink: "#f6ecff", soft: "rgba(246,236,255,0.74)" },
   splitfree: { bg: "#0e8f7e", ink: "#eafff9", soft: "rgba(234,255,249,0.72)" },
   justtrade: { bg: "#ff5a24", ink: "#1a0e08", soft: "rgba(26,14,8,0.72)" },
   justfinance: { bg: "#2b3b8f", ink: "#eef2ff", soft: "rgba(238,242,255,0.7)" },
@@ -141,7 +141,7 @@ function DeckCard({
   const [btnHover, setBtnHover] = useState(false);
   // these covers read better whole — show the full image (letterboxed in the
   // same 4:3 box) instead of top-cropping
-  const coverContain = slug === "zentry-clone" || slug === "astro-ai";
+  const coverContain = slug === "zentry-clone" || slug === "astro";
   // landscape screenshots read better stacked whole than cropped into vertical
   // tiles — zentry's shots are 16:9
   const stackShots = slug === "zentry-clone";

@@ -147,26 +147,26 @@ export const projects: Project[] = [
     },
   },
   {
-    slug: "astro-ai",
-    name: "Astro AI",
-    tagline: "Kundli viewing plus astrologer chat — a paid client build, delivered.",
+    slug: "astro",
+    name: "Astro",
+    tagline: "Astrology in one app — kundli generation and chat with astrologers. A client build in progress.",
     category: "Client work",
     year: "2026",
-    stack: ["React", "TypeScript", "Supabase", "AI chat"],
+    stack: ["React", "TypeScript", "Capacitor", "Android"],
     featured: true,
     metrics: [
-      { value: "Paid", label: "client engagement" },
-      { value: "AI", label: "conversation backend" },
+      { value: "Client", label: "active engagement" },
+      { value: "Android", label: "app platform" },
     ],
     story: {
       problem:
-        "A client, Advik, wanted a product where users view their kundli (birth chart) and then talk to an astrologer — with AI carrying the conversation behind the scenes.",
+        "A client, Advik, wanted a single place for astrology — where users generate their kundli (birth chart), read it, and chat with astrologers, all in one app.",
       build:
-        "The full flow: kundli presentation, a chat experience designed to feel like consulting a person, and an AI conversation layer underneath. Delivered as a working product to the client's spec.",
+        "Building the full product: kundli generation and presentation, the reading views, and a chat experience for talking with astrologers. It's currently in its UI development phase.",
       outcome:
-        "Delivered and paid for. Second client relationship, and proof the pattern repeats: someone brings an idea, I return a running product.",
+        "In active development as a paid client engagement — a second client relationship, and proof the pattern repeats: someone brings an idea, I build the product.",
     },
-    privateNote: "Client owns the product, so the repo stays theirs. The flow is shown with screenshots.",
+    privateNote: "Client owns the product, so the repo stays theirs. It's still in its UI build phase; the flow is shown with early screenshots.",
   },
   {
     slug: "zentry-clone",
@@ -245,7 +245,7 @@ const FEATURED_ORDER = [
   "grit",
   "zentry-clone",
   "atul-finance",
-  "astro-ai",
+  "astro",
   "splitfree",
 ];
 

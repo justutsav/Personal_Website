@@ -18,7 +18,7 @@ If you use another extension, update the paths in
 in `data/projects.ts` ("portrait" for phone screenshots, "landscape" for
 web) so the small tiles get the right shape.
 
-Slugs: atul-finance, justtrade, justfinance, grit, splitfree, astro-ai,
+Slugs: atul-finance, justtrade, justfinance, grit, splitfree, astro,
 zentry-clone, justwhisper, wpm-overlay.
 
 ## 2. Case-study pages
@@ -37,7 +37,7 @@ Suggested shots per project:
 - justfinance/   — anything shareable; even one abstract/cropped shot works
 - grit/          — Play Store listing, task view, Mental Reservoir timer, theme system
 - splitfree/     — group view, expense add flow, settlement screen
-- astro-ai/      — kundli view, chat screen
+- astro/         — kundli view, astrologer chat screen
 - zentry-clone/  — hero, bento grid, story section (site is public — anything goes)
 - justwhisper/   — terminal with timing output, or a short GIF of dictation
 - wpm-overlay/   — overlay in action over a typing test
