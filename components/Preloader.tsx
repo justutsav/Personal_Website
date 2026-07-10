@@ -1,131 +1,131 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import {
+  AnimatePresence,
+  animate,
+  motion,
+  useMotionTemplate,
+  useMotionValue,
+  useReducedMotion,
+} from "framer-motion";
 import { HERO_PRELOAD_SRCS } from "@/data/heroMedia";
 
-/** Never hold the curtain longer than this — a stalled/broken clip on a slow
- *  network must not trap the user on the loading screen. */
-const MAX_WAIT_MS = 8000;
-/** Floor so a warm cache doesn't flash the preloader for a single frame. */
-const MIN_SHOW_MS = 700;
+/* Circle-wipe (iris) intro: flat discs in the site's colours grow from the
+ * centre past the screen edges, one chasing the next — each pass reads as an
+ * expanding ring of the previous colour. They pass exactly once, then the
+ * iris opens. The timeline NEVER waits on the network — hero clips warm in
+ * the background and simply catch up. */
+const WIPES = [
+  "#ff5a24", // accent — coral orange
+  "#5b8cff", // accent-2 — electric blue
+  "#ffa7c9", // sakura pink
+  "#f2ede2", // cream — the colour the site finally opens through
+];
+
+/* ---- TIMING KNOBS — tune to taste ---------------------------------------
+ * WIPE_DUR  one circle's full flight (centre → past the screen edge), seconds.
+ *           Bigger = slower, calmer circles.
+ * WIPE_GAP  delay before the NEXT circle starts, seconds. Smaller = circles
+ *           chase tighter (more ripple-like); bigger = more one-by-one.
+ * The reveal is NOT a separate phase — the site itself is the 5th ripple
+ * member: a hole with the same flight and the same stagger chases the cream
+ * circle out, so there is never a held full-colour frame.                   */
+const WIPE_DUR = 1.35;
+const WIPE_GAP = 0.27;
+
+/** when the reveal hole launches (seconds from load) — the hero syncs its
+ * entrance choreography to this so it animates in AS the iris opens */
+export const INTRO_REVEAL_START = WIPES.length * WIPE_GAP;
 
 /**
- * Session preloader: the counter is tied to *real* asset readiness. It warms
- * the first hero clips off-DOM (which also fills the browser cache the hero's
- * <video> reuses) and only completes once they can play — so the site is
- * revealed with its opening frame ready, not mid-download. The count-up stalls
- * at a ceiling per clip loaded (0 → 70, 1 → 88, 2 → 100) so the wait reads as
- * honest progress. Shown once per session; skipped for reduced-motion users.
+ * Shown on EVERY visit for every user. `show` starts true so the overlay is
+ * in the server HTML itself — the landing page can never flash before the
+ * animation (first paint is the flat near-black screen the first circle grows
+ * out of). Reduced-motion users get that brief still screen, then content.
  */
 export function Preloader() {
   const reduce = useReducedMotion();
-  const [show, setShow] = useState(false);
-  const [count, setCount] = useState(0);
+  const [show, setShow] = useState(true);
+
+  // reveal-hole radius (vmax); masks the overlay so the site shows through.
+  // The discs' radius flies 0→160vmax (20vmax × scale 16 / 2) per flight, so
+  // the hole running the same range/duration/ease IS the next ripple circle —
+  // it trails the cream disc by exactly one stagger and can never overtake it.
+  const hole = useMotionValue(0);
+  const mask = useMotionTemplate`radial-gradient(circle at 50% 50%, transparent ${hole}vmax, #000 calc(${hole}vmax + 0.2vmax))`;
 
   useEffect(() => {
-    if (reduce || sessionStorage.getItem("preloaded")) return;
-    setShow(true);
+    if (reduce) {
+      setShow(false);
+      return;
+    }
     document.documentElement.style.overflow = "hidden";
 
-    const start = Date.now();
-    const total = HERO_PRELOAD_SRCS.length;
-    let ready = 0;
-
-    // Warm the leading hero clips. `canplay` = enough buffered to start;
-    // errors count as "ready" too so one bad source can't wedge the gate.
+    // Best-effort: warm the leading hero clips while the colours run, filling
+    // the cache the hero's <video> reuses. Purely background — the animation
+    // timeline never blocks on it.
     const videos = HERO_PRELOAD_SRCS.map((src) => {
       const v = document.createElement("video");
       v.muted = true;
       v.preload = "auto";
-      const onReady = () => {
-        v.removeEventListener("canplay", onReady);
-        v.removeEventListener("error", onReady);
-        ready += 1;
-      };
-      v.addEventListener("canplay", onReady);
-      v.addEventListener("error", onReady);
       v.src = src;
       v.load();
-      return { v, onReady };
+      return v;
     });
 
-    // non-linear count-up: fast start, hesitation near the ceiling, snap to 100
-    let value = 0;
-    const tick = () => {
-      const elapsed = Date.now() - start;
-      const forced = elapsed >= MAX_WAIT_MS;
-      const allReady = total === 0 || ready >= total;
-      // ceiling gates the counter to real progress until the clips land
-      const ceiling = forced || allReady ? 100 : ready === total - 1 ? 88 : 70;
-      const step =
-        value < 60 ? Math.random() * 14 + 4 : value < 90 ? Math.random() * 6 + 1 : 2;
-      value = Math.min(ceiling, value + step);
-      setCount(Math.floor(value));
-
-      if (value >= 100 && (forced || allReady) && elapsed >= MIN_SHOW_MS) {
-        timer = window.setTimeout(() => {
-          setShow(false);
-          sessionStorage.setItem("preloaded", "1");
-          document.documentElement.style.overflow = "";
-        }, 450);
-      } else {
-        timer = window.setTimeout(tick, 90 + Math.random() * 120);
-      }
-    };
-    let timer = window.setTimeout(tick, 120);
+    const anim = animate(hole, 160, {
+      duration: WIPE_DUR,
+      delay: WIPES.length * WIPE_GAP,
+      ease: [0.65, 0, 0.35, 1],
+      onComplete: () => {
+        setShow(false);
+        document.documentElement.style.overflow = "";
+      },
+    });
 
     return () => {
-      clearTimeout(timer);
+      anim.stop();
       document.documentElement.style.overflow = "";
-      videos.forEach(({ v, onReady }) => {
-        v.removeEventListener("canplay", onReady);
-        v.removeEventListener("error", onReady);
+      videos.forEach((v) => {
         v.removeAttribute("src");
         v.load(); // release the buffer we were holding
       });
     };
-  }, [reduce]);
+  }, [reduce, hole]);
 
   return (
     <AnimatePresence>
       {show && (
         <motion.div
-          className="fixed inset-0 z-[200] flex flex-col justify-between bg-[var(--paper)] px-[var(--edge)] py-10"
-          exit={{ y: "-100%" }}
-          transition={{ duration: 0.9, ease: [0.76, 0, 0.24, 1] }}
+          className="fixed inset-0 z-[200] overflow-hidden bg-[var(--paper)]"
+          style={{ WebkitMaskImage: mask, maskImage: mask }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0 }}
         >
-          <div className="flex items-baseline justify-between font-mono text-micro uppercase tracking-[0.25em] text-ink-soft">
-            <span>justutsav</span>
-            <span>portfolio — 2026</span>
-          </div>
-
-          <div className="overflow-hidden">
-            <motion.p
-              className="font-display text-[clamp(3rem,10vw,9rem)] font-extrabold uppercase leading-none"
-              initial={{ y: "110%" }}
-              animate={{ y: "0%" }}
-              transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
-            >
-              UTSAV<span className="text-accent">.</span>
-            </motion.p>
-          </div>
-
-          <div className="flex items-end justify-between">
-            <span className="font-mono text-micro uppercase tracking-[0.25em] text-ink-soft">
-              loading experience
-            </span>
-            <span className="font-display text-[clamp(2.5rem,6vw,5rem)] font-extrabold text-accent tabular-nums">
-              {count}%
-            </span>
-          </div>
-
-          {/* progress hairline */}
-          <motion.span
-            className="absolute bottom-0 left-0 h-[2px] bg-accent"
-            animate={{ width: `${count}%` }}
-            transition={{ ease: "linear", duration: 0.1 }}
-          />
+          {WIPES.map((c, i) => (
+            <motion.span
+              key={c}
+              aria-hidden
+              className="absolute left-1/2 top-1/2 h-[20vmax] w-[20vmax] rounded-full"
+              style={{
+                background: c,
+                // soft dark rim under each disc's edge — separates it from the
+                // colour beneath so the stack reads as layers, not flat swaps
+                // (scales with the transform, so it stays proportional)
+                boxShadow: "0 0 14px 5px rgba(0,0,0,0.35)",
+                willChange: "transform",
+              }}
+              initial={{ x: "-50%", y: "-50%", scale: 0 }}
+              // scale 16 × 20vmax = 320vmax — well past any screen diagonal
+              animate={{ x: "-50%", y: "-50%", scale: 16 }}
+              transition={{
+                duration: WIPE_DUR,
+                delay: i * WIPE_GAP,
+                ease: [0.65, 0, 0.35, 1],
+              }}
+            />
+          ))}
         </motion.div>
       )}
     </AnimatePresence>

@@ -14,8 +14,14 @@ import {
 } from "framer-motion";
 import { COARSE_QUERY, useMediaQuery } from "@/components/useMediaQuery";
 import { HERO_MEDIA, type HeroMedia as Media } from "@/data/heroMedia";
+import { INTRO_REVEAL_START } from "@/components/Preloader";
 
 const roles = ["WEBSITES", "DASHBOARDS", "MOBILE APPS", "AI AUTOMATION", "CUSTOM TOOLS"];
+
+/** entrance choreography starts as the intro's iris begins to open, so the
+ * card/wordmark are still settling into place while the colour peels away —
+ * nothing "just sits there" when the reveal lands */
+const ENTER = INTRO_REVEAL_START + 0.15;
 
 /**
  * Media cycles in order per session (index kept in sessionStorage); clicking
@@ -243,7 +249,14 @@ export function HeroExperience() {
         }}
         className="relative"
       >
-        <div style={{ perspective: 1000 }} className="relative">
+        {/* entrance: the card rises + swells into place while the iris opens */}
+        <motion.div
+          style={{ perspective: 1000 }}
+          className="relative"
+          initial={reduce ? false : { y: 64, scale: 0.92, opacity: 0 }}
+          animate={{ y: 0, scale: 1, opacity: 1 }}
+          transition={{ delay: ENTER, duration: 1.05, ease: [0.22, 1, 0.36, 1] }}
+        >
           <motion.div
             ref={cardRef}
             onClick={() => advance(1)}
@@ -366,21 +379,26 @@ export function HeroExperience() {
             className="absolute inset-0 flex items-center justify-center"
             style={{ transform: "translateZ(40px)" }}
           >
-            <h1 className="font-display relative inline-block text-center text-[clamp(2.6rem,10vw,8rem)] font-extrabold uppercase leading-[0.9]">
+            <motion.h1
+              className="font-display relative inline-block text-center text-[clamp(2.6rem,10vw,8rem)] font-extrabold uppercase leading-[0.9]"
+              initial={reduce ? false : { opacity: 0, y: "0.45em" }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: ENTER + 0.3, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            >
               <motion.span
                 className="absolute top-[-0.28em] left-[0.06em] font-mono text-[0.16em] lowercase tracking-[0.4em] text-accent-2"
                 initial={reduce ? false : { opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.6 }}
+                transition={{ delay: ENTER + 0.85, duration: 0.6 }}
               >
                 just
               </motion.span>
               UTSAV<span className="text-accent">.</span>
-            </h1>
+            </motion.h1>
           </div>
 
           </motion.div>
-        </div>
+        </motion.div>
       </motion.div>
 
       {/* hint: the frame is interactive — click to cycle clips */}
@@ -389,7 +407,7 @@ export function HeroExperience() {
         style={{ fontSize: "clamp(0.58rem,1.1vw,0.72rem)", letterSpacing: "0.28em" }}
         initial={reduce ? false : { opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.9, duration: 0.7 }}
+        transition={{ delay: ENTER + 1.0, duration: 0.7 }}
       >
         <motion.span
           aria-hidden
@@ -402,8 +420,13 @@ export function HeroExperience() {
         Give the video a tap
       </motion.p>
 
-      {/* tagline below the card, outside the box */}
-      <div className="relative mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 text-center font-mono text-[clamp(0.72rem,1.4vw,1.1rem)] uppercase tracking-[0.18em] md:tracking-[0.25em]">
+      {/* tagline below the card, outside the box — rises in after the card */}
+      <motion.div
+        className="relative mt-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 text-center font-mono text-[clamp(0.72rem,1.4vw,1.1rem)] uppercase tracking-[0.18em] md:tracking-[0.25em]"
+        initial={reduce ? false : { opacity: 0, y: 26 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: ENTER + 0.65, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+      >
         <span className="text-ink-soft">I build</span>
         {/* slot resizes to the current word (layout-animated) so short words
             don't leave a big gap and long words never crop */}
@@ -429,7 +452,7 @@ export function HeroExperience() {
           </AnimatePresence>
         </motion.span>
         <span className="text-ink-soft">people actually use</span>
-      </div>
+      </motion.div>
     </section>
   );
 }
