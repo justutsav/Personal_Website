@@ -40,7 +40,7 @@ export const CONTACT_CHANNELS: ContactChannel[] = [
     badge: "DC",
     label: "Discord",
     handle: "@justutsav",
-    href: null, // pending user ID: https://discord.com/users/<id>
+    href: "https://discord.com/users/1311343404436688998",
     color: "#5865f2",
   },
   {
