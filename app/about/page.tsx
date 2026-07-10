@@ -105,11 +105,11 @@ export default async function About() {
           <Reveal delay={0.2}>
             <div className="mt-8 max-w-[62ch] space-y-5 text-ink-soft">
               <p>
-                My first client was a trading business that needed its investors
-                to stop calling for updates. That project became three: an
-                investor portal now carrying ₹75L+ in capital, the internal
-                ledger behind it, and a unified trading dashboard — plus the VPS
-                they run on.
+                My first client was a finance business that needed its clients
+                to stop calling for updates. That project became three: a
+                client portal now carrying ₹75L+ in managed capital, the
+                internal ledger behind it, and a unified markets dashboard —
+                plus the VPS they run on.
               </p>
               <p>
                 Between client work I build my own things: a Play Store app

@@ -10,12 +10,13 @@ import { JourneyTimeline } from "@/components/JourneyTimeline";
 import { MusicDisk } from "@/components/MusicDisk";
 import { ShowcaseSection } from "@/components/ShowcaseSection";
 import { ContactMedia } from "@/components/ContactMedia";
+import { ContactDialog } from "@/components/ContactDialog";
 import { featuredProjects } from "@/data/projects";
 import { publicImageSize } from "@/lib/imageMeta";
 
 const heroStats = [
   { value: 75, prefix: "₹", suffix: "L+", label: "capital managed by my software" },
-  { value: 50, suffix: "+", label: "investors using it daily" },
+  { value: 50, suffix: "+", label: "clients using it daily" },
   { value: 23, suffix: "", label: "Play Store releases shipped solo" },
   { value: 3, suffix: "", label: "businesses running on my builds" },
 ];
@@ -130,17 +131,7 @@ export default function Home() {
               </Reveal>
               <Reveal delay={0.4}>
                 <div className="mt-8 flex flex-wrap items-center gap-4">
-                  <Magnetic>
-                    <a
-                      href="https://mail.google.com/mail/?view=cm&fs=1&to=justutsav.05@gmail.com&su=Something%20that%20should%20exist"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      data-cursor-label="email"
-                      className="inline-block rounded-full bg-accent px-8 py-4 font-mono text-small uppercase tracking-widest text-[var(--paper)] transition-colors duration-300 hover:bg-accent-deep"
-                    >
-                      justutsav.05@gmail.com
-                    </a>
-                  </Magnetic>
+                  <ContactDialog />
                   <Magnetic>
                     <Link
                       href="/about"

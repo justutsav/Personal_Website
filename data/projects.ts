@@ -28,56 +28,56 @@ export const projects: Project[] = [
   {
     slug: "atul-finance",
     name: "Atul Finance",
-    tagline: "Investor portal for a trading business — 50+ investors track their returns here.",
+    tagline: "Client portal for a finance business — 50+ clients track their portfolios here.",
     category: "Client work",
     year: "2025 — ongoing",
     stack: ["React", "TypeScript", "Supabase", "PostgreSQL"],
     featured: true,
     metrics: [
       { value: "₹75L+", label: "capital managed" },
-      { value: "50+", label: "active investors" },
+      { value: "50+", label: "active clients" },
       { value: "1st", label: "project shipped" },
     ],
     story: {
       problem:
-        "A trader raising capital from private investors had no way to show them how their money was doing. Updates travelled over phone calls and screenshots — no trust layer, no history, no self-service.",
+        "A growing finance business had no way to show its clients how their portfolios were doing. Updates travelled over phone calls and screenshots — no trust layer, no history, no self-service.",
       build:
-        "A web portal where every investor logs in and sees their own capital, returns and full transaction history — while the owner manages everything from an admin side. Built end-to-end: auth, roles, database design, deployment.",
+        "A web portal where every client logs in and sees their own portfolio, returns and full transaction history — while the owner manages everything from an admin side. Built end-to-end: auth, roles, database design, deployment.",
       outcome:
-        "In production since 2025. Investors check their positions themselves instead of calling. The portal now carries the trust of ₹75L+ in managed capital — and it was my first shipped project. The UI has come a long way since v1, and I keep the early screenshots around as proof of the distance travelled.",
+        "In production since 2025. Clients check their numbers themselves instead of calling. The portal now carries the trust of ₹75L+ in managed capital — and it was my first shipped project. The UI has come a long way since v1, and I keep the early screenshots around as proof of the distance travelled.",
     },
     privateNote:
-      "Code stays private — it runs a real business with real investor data. Screenshots and the numbers speak instead.",
+      "Code stays private — it runs a real business with real client data. Screenshots and the numbers speak instead.",
     links: [{ label: "atulfinance.com", href: "https://www.atulfinance.com" }],
   },
   {
     slug: "justtrade",
     name: "JustTrade",
-    tagline: "One dashboard for every trading account the business runs.",
+    tagline: "One dashboard for every brokerage account the business runs.",
     category: "Client work",
     year: "2026 — ongoing",
     stack: ["React", "TypeScript", "Supabase", "VPS", "Java"],
     featured: false,
     metrics: [
       { value: "Multi", label: "broker accounts unified" },
-      { value: "Daily", label: "driver of trading decisions" },
+      { value: "Daily", label: "driver of the day's decisions" },
       { value: "Self-hosted", label: "on a VPS I run" },
     ],
     story: {
       problem:
-        "The same trading business ran positions across several accounts. Each broker has its own app, its own format — no single view of exposure, P&L or history across all of them.",
+        "The business's own market activity ran across several brokerage accounts. Each broker has its own app, its own format — no single view of exposure, P&L or history across all of them.",
       build:
         "A unified trade-tracking system: every trade from every account flows into one place, with dashboards shaped around how the owner actually reads his day. I also set up and run the VPS it lives on — deployment, domains, uptime, all of it.",
       outcome:
         "The owner opens one screen instead of five broker apps. Trade history, account-wise breakdowns and daily P&L in the exact layout he asked for. Infrastructure included — not just the app, the server under it.",
     },
     privateNote:
-      "Private for the same reason as Atul Finance: live trading data. The dashboard screenshots are sanitised.",
+      "Private for the same reason as Atul Finance: live business data. The dashboard screenshots are sanitised.",
   },
   {
     slug: "justfinance",
     name: "JustFinance",
-    tagline: "The internal ledger behind the trading business — capital in, returns out, analysis in between.",
+    tagline: "The internal ledger behind the finance business — money in, money out, analysis in between.",
     category: "Client work",
     year: "2026 — ongoing",
     stack: ["React", "TypeScript", "Supabase", "PostgreSQL"],
@@ -88,7 +88,7 @@ export const projects: Project[] = [
     ],
     story: {
       problem:
-        "Investor money coming in, returns going out, expenses, and the business's own analysis — all living in spreadsheets and memory. The owner needed the internal side of the business to be as organised as the investor-facing side.",
+        "Money coming in, payouts going out, expenses, and the business's own analysis — all living in spreadsheets and memory. The owner needed the internal side of the business to be as organised as the client-facing side.",
       build:
         "An internal finance-management system covering the flows Atul Finance doesn't show publicly: capital tracking, business analysis, operational records. Designed around how the owner and his employee actually work, not around a generic template.",
       outcome:

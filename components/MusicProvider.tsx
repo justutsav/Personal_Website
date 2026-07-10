@@ -114,7 +114,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const playTo = (target: number, ms: number) => {
     const a = audioRef.current;
     if (!a) return;
-    if (a.readyState === 0) a.load(); // preload="none" → fetch on first real need
+    if (a.readyState === 0) a.load(); // safety net if the preload never kicked in
     if (a.paused) a.volume = 0; // start silent → fade in
     a.play()
       .then(() => fadeTo(target, ms))
@@ -311,8 +311,11 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   return (
     <MusicCtx.Provider value={value}>
       {/* audio lives here so playback survives route changes. No loop — tracks
-          advance on end via onEnded, wrapping back to the first. */}
-      <audio ref={audioRef} src={track.src} onEnded={onEnded} preload="none" />
+          advance on end via onEnded, wrapping back to the first.
+          preload="auto": the current track (compressed, ~2.5-4MB) buffers from
+          page load so the first play hits instantly on scroll — lazy loading
+          here made the music miss its moment. */}
+      <audio ref={audioRef} src={track.src} onEnded={onEnded} preload="auto" />
       {children}
     </MusicCtx.Provider>
   );
