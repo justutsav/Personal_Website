@@ -91,7 +91,9 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
           const el = document.getElementById("work");
           if (el) lenis.scrollTo(el as HTMLElement, { offset: -72, immediate: true });
         } else {
-          lenis.scrollTo(parseInt(restore as string, 10), { immediate: true });
+          // stored value can be garbage — never feed NaN to Lenis
+          const y = parseInt(restore as string, 10);
+          if (Number.isFinite(y)) lenis.scrollTo(y, { immediate: true });
         }
       };
       requestAnimationFrame(apply);

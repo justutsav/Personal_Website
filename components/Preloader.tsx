@@ -2,11 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { HERO_PRELOAD_SRCS } from "@/data/heroMedia";
+
+/** Never hold the curtain longer than this — a stalled/broken clip on a slow
+ *  network must not trap the user on the loading screen. */
+const MAX_WAIT_MS = 8000;
+/** Floor so a warm cache doesn't flash the preloader for a single frame. */
+const MIN_SHOW_MS = 700;
 
 /**
- * Session preloader: counter runs 0→100 while the wordmark reveals,
- * then the curtain lifts. Shown once per browser session; skipped for
- * reduced-motion users.
+ * Session preloader: the counter is tied to *real* asset readiness. It warms
+ * the first hero clips off-DOM (which also fills the browser cache the hero's
+ * <video> reuses) and only completes once they can play — so the site is
+ * revealed with its opening frame ready, not mid-download. The count-up stalls
+ * at a ceiling per clip loaded (0 → 70, 1 → 88, 2 → 100) so the wait reads as
+ * honest progress. Shown once per session; skipped for reduced-motion users.
  */
 export function Preloader() {
   const reduce = useReducedMotion();
@@ -18,27 +28,62 @@ export function Preloader() {
     setShow(true);
     document.documentElement.style.overflow = "hidden";
 
-    // non-linear count-up: fast start, hesitation, snap to 100
+    const start = Date.now();
+    const total = HERO_PRELOAD_SRCS.length;
+    let ready = 0;
+
+    // Warm the leading hero clips. `canplay` = enough buffered to start;
+    // errors count as "ready" too so one bad source can't wedge the gate.
+    const videos = HERO_PRELOAD_SRCS.map((src) => {
+      const v = document.createElement("video");
+      v.muted = true;
+      v.preload = "auto";
+      const onReady = () => {
+        v.removeEventListener("canplay", onReady);
+        v.removeEventListener("error", onReady);
+        ready += 1;
+      };
+      v.addEventListener("canplay", onReady);
+      v.addEventListener("error", onReady);
+      v.src = src;
+      v.load();
+      return { v, onReady };
+    });
+
+    // non-linear count-up: fast start, hesitation near the ceiling, snap to 100
     let value = 0;
     const tick = () => {
+      const elapsed = Date.now() - start;
+      const forced = elapsed >= MAX_WAIT_MS;
+      const allReady = total === 0 || ready >= total;
+      // ceiling gates the counter to real progress until the clips land
+      const ceiling = forced || allReady ? 100 : ready === total - 1 ? 88 : 70;
       const step =
         value < 60 ? Math.random() * 14 + 4 : value < 90 ? Math.random() * 6 + 1 : 2;
-      value = Math.min(100, value + step);
+      value = Math.min(ceiling, value + step);
       setCount(Math.floor(value));
-      if (value < 100) {
-        timer = window.setTimeout(tick, 90 + Math.random() * 120);
-      } else {
+
+      if (value >= 100 && (forced || allReady) && elapsed >= MIN_SHOW_MS) {
         timer = window.setTimeout(() => {
           setShow(false);
           sessionStorage.setItem("preloaded", "1");
           document.documentElement.style.overflow = "";
         }, 450);
+      } else {
+        timer = window.setTimeout(tick, 90 + Math.random() * 120);
       }
     };
     let timer = window.setTimeout(tick, 120);
+
     return () => {
       clearTimeout(timer);
       document.documentElement.style.overflow = "";
+      videos.forEach(({ v, onReady }) => {
+        v.removeEventListener("canplay", onReady);
+        v.removeEventListener("error", onReady);
+        v.removeAttribute("src");
+        v.load(); // release the buffer we were holding
+      });
     };
   }, [reduce]);
 

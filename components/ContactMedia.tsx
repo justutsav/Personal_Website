@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useReducedMotion } from "framer-motion";
 
 /**
  * Right-side contact media (video or photo, uploaded later) that fades
@@ -9,12 +10,33 @@ import { useState } from "react";
  */
 export function ContactMedia() {
   const [state, setState] = useState<"video" | "image" | "placeholder">("video");
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const reduceMotion = useReducedMotion();
+
+  // Only play while the wrapper is on screen; never play under reduced motion
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper || state !== "video") return;
+    const observer = new IntersectionObserver(([entry]) => {
+      const video = videoRef.current;
+      if (!video) return;
+      if (entry.isIntersecting) {
+        if (!reduceMotion) video.play().catch(() => {});
+      } else {
+        video.pause();
+      }
+    });
+    observer.observe(wrapper);
+    return () => observer.disconnect();
+  }, [state, reduceMotion]);
 
   const fade =
     "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.35) 22%, #000 55%)";
 
   return (
     <div
+      ref={wrapperRef}
       className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl md:aspect-auto md:h-full"
       style={{
         WebkitMaskImage: fade,
@@ -23,9 +45,10 @@ export function ContactMedia() {
     >
       {state === "video" && (
         <video
+          ref={videoRef}
           className="h-full w-full object-cover"
           src="/assests/contact.mp4"
-          autoPlay
+          preload="none"
           loop
           muted
           playsInline

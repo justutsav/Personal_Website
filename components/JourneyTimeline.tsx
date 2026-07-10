@@ -288,6 +288,7 @@ function DetailPanel({ chapter, onClose }: { chapter: Chapter | null; onClose: (
             onClick={onClose}
           />
           <motion.aside
+            data-lenis-prevent
             className="fixed right-0 top-0 z-[61] flex h-full w-[min(92vw,460px)] flex-col overflow-y-auto border-l border-line-strong bg-paper-raised p-8"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
@@ -350,10 +351,17 @@ export function JourneyTimeline() {
   const maxX = Math.max(0, trackW - vw);
 
   useEffect(() => {
-    const measure = () => setVw(window.innerWidth);
-    measure();
+    let raf = 0;
+    const measure = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => setVw(window.innerWidth));
+    };
+    setVw(window.innerWidth);
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", measure);
+    };
   }, []);
 
   const { scrollYProgress } = useScroll({

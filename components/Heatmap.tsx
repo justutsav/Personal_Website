@@ -14,6 +14,8 @@ const LEVEL_COLORS = [
  * site's own palette. Weeks as columns, days as rows.
  */
 export function Heatmap({ days, label }: { days: Day[]; label: string }) {
+  if (!days.length) return null;
+
   // Align the first column to a week boundary (Sunday start)
   const firstDow = new Date(days[0].date + "T00:00:00Z").getUTCDay();
   const cell = 10;

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   AnimatePresence,
   motion,
+  useInView,
   useMotionTemplate,
   useMotionValue,
   useReducedMotion,
@@ -12,25 +13,16 @@ import {
   useTransform,
 } from "framer-motion";
 import { COARSE_QUERY, useMediaQuery } from "@/components/useMediaQuery";
+import { HERO_MEDIA, type HeroMedia as Media } from "@/data/heroMedia";
 
 const roles = ["WEBSITES", "DASHBOARDS", "MOBILE APPS", "AI AUTOMATION", "CUSTOM TOOLS"];
 
 /**
- * Hero media pool. Drop videos/photos into public/assests/hero/ and add
- * them here. Cycles in order per session (index kept in sessionStorage);
- * clicking the card advances to the next. Hovering reveals the NEXT clip
- * through a small lens around the cursor. Broken sources auto-skip.
+ * Media cycles in order per session (index kept in sessionStorage); clicking
+ * the card advances to the next. Hovering reveals the NEXT clip through a
+ * small lens around the cursor. Broken sources auto-skip. The pool itself
+ * lives in data/heroMedia.ts so the Preloader can warm the first clips.
  */
-type Media = { src: string; type: "video" | "image" };
-const HERO_MEDIA: Media[] = [
-  { src: "/assests/hero/01.mp4", type: "video" },
-  { src: "/assests/hero/02.mp4", type: "video" },
-  { src: "/assests/hero/03.mp4", type: "video" },
-  { src: "/assests/hero/04.mp4", type: "video" },
-  { src: "/assests/hero/05.mp4", type: "video" },
-  // add more: drop into public/assests/hero/ and append { src, type } here
-];
-
 const SESSION_KEY = "hero-media-index";
 
 /* ---------- falling sakura petals (very few) ---------- */
@@ -79,10 +71,12 @@ function MediaLayer({
   media,
   still = false,
   onError,
+  videoRef,
 }: {
   media: Media;
   still?: boolean;
   onError?: () => void;
+  videoRef?: React.Ref<HTMLVideoElement>;
 }) {
   if (media.type === "image") {
     // eslint-disable-next-line @next/next/no-img-element
@@ -97,13 +91,16 @@ function MediaLayer({
   }
   return (
     <video
+      ref={videoRef}
       className="h-full w-full scale-105 object-cover saturate-[0.95]"
       src={media.src}
       autoPlay={!still}
       loop={!still}
       muted
       playsInline
-      preload="auto"
+      // still = permanently-mounted lens preview: "auto" would eagerly pull
+      // whole next clip (MBs) on load; metadata is enough for a first frame
+      preload={still ? "metadata" : "auto"}
       onError={onError}
     />
   );
@@ -121,13 +118,18 @@ export function HeroExperience() {
   // (they misfire on synthesized touch events). Tap-to-advance still works.
   const coarse = useMediaQuery(COARSE_QUERY);
 
+  // offscreen hero = every infinite loop (grain, scan, petals, float, glyph,
+  // role interval, video decode) burning CPU for nothing — gate them all here
+  const heroRef = useRef<HTMLElement>(null);
+  const inView = useInView(heroRef);
+
   /* rotating role word */
   const [role, setRole] = useState(0);
   useEffect(() => {
-    if (reduce) return;
+    if (reduce || !inView) return;
     const id = setInterval(() => setRole((r) => (r + 1) % roles.length), 1800);
     return () => clearInterval(id);
-  }, [reduce]);
+  }, [reduce, inView]);
 
   /* cycle through media in order, persist position for the session */
   const [mediaIndex, setMediaIndex] = useState(0);
@@ -144,8 +146,27 @@ export function HeroExperience() {
     });
   };
 
+  // if every source errors, advance() would remount → error → advance forever;
+  // once all indices have failed, stop cycling and stay put
+  const failedMedia = useRef(new Set<number>());
+  const onMediaError = () => {
+    failedMedia.current.add(mediaIndex);
+    if (failedMedia.current.size >= HERO_MEDIA.length) return;
+    advance(1);
+  };
+
   const media = HERO_MEDIA[mediaIndex];
   const nextMedia = HERO_MEDIA[(mediaIndex + 1) % HERO_MEDIA.length];
+
+  /* pause the active clip while scrolled away (it keeps decoding otherwise);
+     resume on return — unless the tab itself is hidden */
+  const activeVideoRef = useRef<HTMLVideoElement | null>(null);
+  useEffect(() => {
+    const v = activeVideoRef.current;
+    if (!v) return;
+    if (!inView) v.pause();
+    else if (!document.hidden) v.play().catch(() => {});
+  }, [inView, mediaIndex]);
 
   /* gentle wobble toward the cursor */
   const rx = useMotionValue(0);
@@ -164,7 +185,6 @@ export function HeroExperience() {
   const cardRef = useRef<HTMLDivElement>(null);
 
   /* scroll: the card arcs up + curves as you leave the hero */
-  const heroRef = useRef<HTMLElement>(null);
   const { scrollYProgress: hp } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"],
@@ -199,7 +219,7 @@ export function HeroExperience() {
       ref={heroRef}
       className="relative flex h-screen flex-col items-center justify-center overflow-hidden bg-paper"
     >
-      {!reduce && <Petals />}
+      {!reduce && inView && <Petals />}
 
       {/* convex "bulge" clip — panel swells from the middle, like the
           showcase cards below (responsive via objectBoundingBox) */}
@@ -238,7 +258,7 @@ export function HeroExperience() {
               aspectRatio: "16 / 7.6",
               clipPath: "url(#bulge)",
             }}
-            animate={reduce ? undefined : { y: [0, -5, 0] }}
+            animate={reduce || !inView ? undefined : { y: [0, -5, 0] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
           >
           {/* current media */}
@@ -251,7 +271,7 @@ export function HeroExperience() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <MediaLayer media={media} onError={() => advance(1)} />
+              <MediaLayer media={media} onError={onMediaError} videoRef={activeVideoRef} />
             </motion.div>
           </AnimatePresence>
 
@@ -304,10 +324,15 @@ export function HeroExperience() {
               opacity: 0.55,
             }}
           />
+          {/* grain jitters via x/y transforms on an oversized layer (compositor
+              only) — animating background-position repaints every frame. Layer
+              overhangs by one 160px tile in each direction so the translate
+              wraps seamlessly */}
           <motion.div
             aria-hidden
-            className="pointer-events-none absolute inset-0"
+            className="pointer-events-none absolute"
             style={{
+              inset: "-160px",
               backgroundImage:
                 "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23n)'/%3E%3C/svg%3E\")",
               backgroundSize: "160px 160px",
@@ -315,9 +340,7 @@ export function HeroExperience() {
               opacity: 0.14,
             }}
             animate={
-              reduce
-                ? undefined
-                : { backgroundPositionX: ["0px", "160px"], backgroundPositionY: ["0px", "-160px"] }
+              reduce || !inView ? undefined : { x: ["0px", "160px"], y: ["0px", "-160px"] }
             }
             transition={{ duration: 0.5, repeat: Infinity, ease: "linear" }}
           />
@@ -325,13 +348,15 @@ export function HeroExperience() {
           {!reduce && (
             <motion.div
               aria-hidden
-              className="pointer-events-none absolute inset-x-0 h-1/3"
+              className="pointer-events-none absolute inset-x-0 top-0 h-1/3"
               style={{
                 background:
                   "linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0) 100%)",
                 mixBlendMode: "overlay",
               }}
-              animate={{ top: ["-33%", "100%"] }}
+              // y transform (compositor) instead of `top` (layout per frame);
+              // bar is 1/3 card tall, so -100%..300% of self = -33%..100% of card
+              animate={inView ? { y: ["-100%", "300%"] } : undefined}
               transition={{ duration: 5.5, repeat: Infinity, ease: "linear" }}
             />
           )}
@@ -369,7 +394,7 @@ export function HeroExperience() {
         <motion.span
           aria-hidden
           className="text-accent-2"
-          animate={reduce ? undefined : { rotate: 360 }}
+          animate={reduce || !inView ? undefined : { rotate: 360 }}
           transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
         >
           ↻

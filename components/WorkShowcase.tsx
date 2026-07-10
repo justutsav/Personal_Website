@@ -100,6 +100,8 @@ function Media({
         <img
           src={src}
           alt={label}
+          loading="lazy"
+          decoding="async"
           onError={() => setOk(false)}
           className={`h-full w-full ${crop ? "object-cover object-top" : "object-contain"}`}
         />

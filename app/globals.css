@@ -31,6 +31,13 @@ html {
      (sticky + negative-margin overlaps + per-frame transforms): mid-scroll
      it re-anchors and yanks the page BACK UP. Kill it — Lenis owns scroll. */
   overflow-anchor: none;
+  /* Pinned/snapping sections make the native scrollbar jump around and give
+     away the scroll-jacking — hide it; the page still scrolls normally. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html::-webkit-scrollbar {
+  display: none;
 }
 
 body {

@@ -24,10 +24,64 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Utsav",
+  metadataBase: new URL("https://justutsav.com"),
+  title: {
+    default: "Utsav (justutsav) — Independent Developer",
+    template: "%s — Utsav",
+  },
   description:
     "Independent developer building web apps, dashboards, mobile apps and automation. Work in production managing ₹75L+ for real businesses.",
-  metadataBase: new URL("https://justutsav.com"),
+  keywords: [
+    "justutsav",
+    "Utsav",
+    "independent developer",
+    "full-stack developer",
+    "web apps",
+    "dashboards",
+    "mobile apps",
+    "automation",
+  ],
+  authors: [{ name: "Utsav", url: "https://justutsav.com" }],
+  creator: "Utsav",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    url: "https://justutsav.com",
+    siteName: "Utsav — justutsav",
+    title: "Utsav (justutsav) — Independent Developer",
+    description:
+      "Independent developer building web apps, dashboards, mobile apps and automation. Work in production managing ₹75L+ for real businesses.",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Utsav (justutsav) — Independent Developer",
+    description:
+      "Web apps, dashboards, mobile apps and automation — in production for real businesses.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large" },
+  },
+};
+
+/** Person schema so Google connects "justutsav" the handle to this site and
+ * the profiles it already knows (GitHub etc.) — key for name-query ranking. */
+const personJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Utsav",
+  alternateName: "justutsav",
+  url: "https://justutsav.com",
+  email: "mailto:justutsav.05@gmail.com",
+  jobTitle: "Independent Software Developer",
+  description:
+    "Independent developer building web apps, dashboards, mobile apps and automation for real businesses.",
+  sameAs: [
+    "https://github.com/justutsav",
+    "https://monkeytype.com/profile/justutsav",
+  ],
 };
 
 export default function RootLayout({
@@ -41,6 +95,10 @@ export default function RootLayout({
       className={`${syne.variable} ${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col grain">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+        />
         <MusicProvider>
           <SmoothScroll>
             <Preloader />

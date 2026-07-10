@@ -114,6 +114,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const playTo = (target: number, ms: number) => {
     const a = audioRef.current;
     if (!a) return;
+    if (a.readyState === 0) a.load(); // preload="none" → fetch on first real need
     if (a.paused) a.volume = 0; // start silent → fade in
     a.play()
       .then(() => fadeTo(target, ms))
@@ -213,6 +214,14 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
         a.muted = true;
         a.play()
           .then(() => {
+            // the click that followed this pointerdown may have already begun
+            // real playback (togglePaused → playTo) — don't kill it. Unmute
+            // and let the in-flight fade own the volume.
+            if (startedRef.current) {
+              a.muted = false;
+              if (fadeRef.current === null) a.volume = v;
+              return;
+            }
             a.pause();
             a.currentTime = 0;
             a.muted = false;
@@ -257,7 +266,14 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
   const changeTrack = (dir: number) => {
     if (TRACKS.length < 2) return;
-    fadeTo(0);
+    // the src swap below hard-cuts anyway — kill any running fade and drop to
+    // silent synchronously, or the orphaned interval drags the NEW track to 0
+    const a = audioRef.current;
+    if (fadeRef.current) {
+      window.clearInterval(fadeRef.current);
+      fadeRef.current = null;
+    }
+    if (a) a.volume = 0;
     setHasCover(true);
     setIdx((i) => (i + dir + TRACKS.length) % TRACKS.length);
   };
@@ -296,7 +312,7 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     <MusicCtx.Provider value={value}>
       {/* audio lives here so playback survives route changes. No loop — tracks
           advance on end via onEnded, wrapping back to the first. */}
-      <audio ref={audioRef} src={track.src} onEnded={onEnded} preload="auto" />
+      <audio ref={audioRef} src={track.src} onEnded={onEnded} preload="none" />
       {children}
     </MusicCtx.Provider>
   );

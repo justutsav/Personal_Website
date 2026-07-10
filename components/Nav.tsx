@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { Magnetic } from "@/components/Magnetic";
@@ -55,6 +55,9 @@ function MusicToggle() {
 export function Nav() {
   const [hidden, setHidden] = useState(false);
   const [pastHero, setPastHero] = useState(false);
+  // cached viewport height — reading window.innerHeight per scroll event
+  // forces layout; refresh it on resize instead
+  const viewportH = useRef(0);
   const pathname = usePathname();
   const hasHero = pathname === "/"; // only home opens with the full-screen hero
 
@@ -74,15 +77,23 @@ export function Nav() {
 
   useEffect(() => {
     let lastY = window.scrollY;
+    const onResize = () => {
+      viewportH.current = window.innerHeight;
+    };
+    onResize();
     const onScroll = () => {
       const y = window.scrollY;
       setHidden(y > lastY && y > 120); // down → hide (after a little travel)
       lastY = y;
-      setPastHero(hasHero ? y > window.innerHeight * 0.85 : y > 8);
+      setPastHero(hasHero ? y > viewportH.current * 0.85 : y > 8);
     };
     onScroll();
+    window.addEventListener("resize", onResize);
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onScroll);
+    };
   }, [hasHero]);
 
   return (
