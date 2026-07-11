@@ -370,29 +370,35 @@ export function WorkShowcase({
   // pure black. Nothing translucent ever sits over the cards.
   const boxScale = useTransform(scrollYProgress, [0, introEnd * 0.62], [0.6, 1.12]);
   const boxRadius = useTransform(scrollYProgress, [0, introEnd * 0.55], [40, 0]);
-  // overlay is pulled DOWN off-screen (like mobile) so the deck unveils
-  // from the top as you scroll
-  const introY = useTransform(
-    scrollYProgress,
-    [introEnd * 0.78, introEnd],
-    ["0vh", "115vh"]
-  );
+  // asymmetric overlay exit: scrolling forward it LIFTS UP off-screen, but
+  // returning from below it comes back rising from the BOTTOM. The side is
+  // latched only while the overlay fully covers (e=0) or is fully gone (e=1),
+  // so a mid-flight direction change never teleports it.
+  const introDir = useRef(-1);
+  const introY = useTransform(scrollYProgress, (p) => {
+    const e = Math.min(Math.max((p - introEnd * 0.78) / (introEnd * 0.22), 0), 1);
+    if (e <= 0) introDir.current = -1; // covering — next exit lifts up
+    else if (e >= 1) introDir.current = 1; // gone — return rises from below
+    return `${e * 115 * introDir.current}vh`;
+  });
 
   // deck runs on the remaining scroll after the intro
   const deckProgress = useTransform(scrollYProgress, [introEnd, 1], [0, 1]);
 
   // mobile intro: same grow-in box, but the runway is INTRO_VH + one screen —
   // once the overlay slides off, the stage holds for that screen then scrolls
-  // away naturally with the swipe stack seated inside it. Unlike desktop the
-  // overlay is pulled DOWN off-screen, so the deck is unveiled from the top.
+  // away naturally with the swipe stack seated inside it. Same asymmetric
+  // exit as desktop: lifts up going forward, returns from below coming back.
   const introEndM = INTRO_VH / (INTRO_VH + 100);
   const boxScaleM = useTransform(scrollYProgress, [0, introEndM * 0.62], [0.6, 1.12]);
   const boxRadiusM = useTransform(scrollYProgress, [0, introEndM * 0.55], [40, 0]);
-  const introYM = useTransform(
-    scrollYProgress,
-    [introEndM * 0.78, introEndM],
-    ["0vh", "115vh"]
-  );
+  const introDirM = useRef(-1);
+  const introYM = useTransform(scrollYProgress, (p) => {
+    const e = Math.min(Math.max((p - introEndM * 0.78) / (introEndM * 0.22), 0), 1);
+    if (e <= 0) introDirM.current = -1;
+    else if (e >= 1) introDirM.current = 1;
+    return `${e * 115 * introDirM.current}vh`;
+  });
 
   const [swipeIndex, setSwipeIndex] = useState(0);
   const [swipeExit, setSwipeExit] = useState(0);
@@ -660,8 +666,9 @@ export function WorkShowcase({
             />
           ))}
 
-          {/* intro: solid cream panel with a growing black box; slides down as
-              one opaque unit to reveal the deck. No fades, nothing translucent. */}
+          {/* intro: solid cream panel with a growing black box; slides off as
+              one opaque unit to reveal the deck (up going forward, back in
+              from below when returning). No fades, nothing translucent. */}
           <motion.div
             style={{ y: introY, zIndex: 3000 }}
             className="absolute inset-0 flex items-center justify-center overflow-hidden bg-panel-ink"
