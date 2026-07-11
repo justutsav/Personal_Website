@@ -390,6 +390,10 @@ export function WorkShowcase({
   const underScale = useTransform(swipeX, [-140, 0, 140], [1, 0.94, 1]);
   const underY = useTransform(swipeX, [-140, 0, 140], [0, 16, 0]);
   const underDim = useTransform(swipeX, [-140, 0, 140], [1, 0.88, 1]);
+  // under cards fan out sideways so their edges peek past the top card —
+  // the "there's more beneath" cue; they tuck back in as the top card leaves
+  const underX = useTransform(swipeX, [-140, 0, 140], [0, 14, 0]);
+  const underRot = useTransform(swipeX, [-140, 0, 140], [0, 2.5, 0]);
   const tapStart = useRef({ x: 0, y: 0 });
 
   if (reduce) {
@@ -427,8 +431,14 @@ export function WorkShowcase({
       };
     });
 
+    // blackish, like the desktop deck box — the cream world scrolls away and
+    // this dark room slides up (rounded top + negative margin), music
+    // latching via the marker as it enters
     return (
-      <section id="work" className="relative bg-panel-ink px-[var(--edge)] py-[var(--section-gap)]">
+      <section
+        id="work"
+        className="relative -mt-6 rounded-t-3xl bg-[#101010] px-[var(--edge)] py-[var(--section-gap)] shadow-[0_-24px_60px_rgba(0,0,0,0.45)]"
+      >
         {/* reached-latch marker — MusicProvider's startIO needs it on mobile too */}
         <div id="work-open" aria-hidden className="pointer-events-none absolute left-0 h-px w-px" style={{ top: "6%" }} />
         <motion.div
@@ -440,7 +450,7 @@ export function WorkShowcase({
           <p className="font-mono text-micro uppercase tracking-[0.35em] text-accent">
             Portfolio
           </p>
-          <h2 className="font-display mt-3 text-[clamp(2.2rem,10vw,3.5rem)] font-extrabold uppercase leading-[0.95] text-ink-on-panel">
+          <h2 className="font-display mt-3 text-[clamp(2.2rem,10vw,3.5rem)] font-extrabold uppercase leading-[0.95] text-ink">
             Selected work
           </h2>
         </motion.div>
@@ -514,8 +524,8 @@ export function WorkShowcase({
                   ...(isTop
                     ? { x: swipeX, rotate: swipeRotate, zIndex: 3 }
                     : isNext
-                      ? { scale: underScale, y: underY, opacity: underDim, zIndex: 2 }
-                      : { scale: 0.9, y: 26, opacity: 0.75, zIndex: 1 }),
+                      ? { scale: underScale, y: underY, x: underX, rotate: underRot, opacity: underDim, zIndex: 2 }
+                      : { scale: 0.9, y: 26, x: -14, rotate: -2.5, opacity: 0.75, zIndex: 1 }),
                 }}
                 className="absolute inset-0 flex select-none flex-col overflow-hidden rounded-2xl p-5"
               >
@@ -573,12 +583,12 @@ export function WorkShowcase({
               <span
                 key={p.slug}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i === active ? "w-5 bg-accent" : "w-1.5 bg-ink-on-panel/25"
+                  i === active ? "w-5 bg-accent" : "w-1.5 bg-ink/25"
                 }`}
               />
             ))}
           </div>
-          <div className="flex items-center gap-4 font-mono text-micro uppercase tracking-[0.25em] text-ink-on-panel">
+          <div className="flex items-center gap-4 font-mono text-micro uppercase tracking-[0.25em] text-ink-soft">
             <span>
               {String(active + 1).padStart(2, "0")}/{String(len).padStart(2, "0")}
             </span>

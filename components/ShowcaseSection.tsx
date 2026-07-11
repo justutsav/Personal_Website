@@ -101,41 +101,29 @@ export function ShowcaseSection() {
   // same hysteresis index as the 3D snap so the caption flips with the card
   useMotionValueEvent(scrollYProgress, "change", (p) => setActive(snapIndex(p)));
 
-  // mobile deck index — plain floor over N equal segments (flips exactly where
-  // a handoff completes); desktop keeps its own hysteresis `active` above.
-  // `ref` attaches to whichever branch renders, so scrollYProgress just works.
+  // mobile: active card index, reported by an IntersectionObserver on the
+  // snap-carousel cards (the industry-standard mobile pattern — native
+  // scroll-snap composites off-main-thread and inherits platform momentum;
+  // scroll-driven transforms proved unreliable on real phones)
   const [mActive, setMActive] = useState(0);
-  useMotionValueEvent(scrollYProgress, "change", (p) =>
-    setMActive(Math.min(N - 1, Math.max(0, Math.floor(p * N))))
-  );
-
-  // mobile deck: per-card transform tracks. Each card seats in segment
-  // [i, i+1]/N of progress; the last DECK_T of a segment is the handoff — the
-  // outgoing card lifts (-12vh), tilts (-6°), shrinks and fades while the
-  // incoming one rises from +10vh / 0.94 beneath. Transform + opacity only
-  // (no blur / animated shadow — low-end Android). SHOWCASE is a module
-  // constant, so the hook count in this loop is stable across renders.
-  const DECK_SEG = 1 / N;
-  const DECK_T = DECK_SEG * 0.4;
-  const deck = SHOWCASE.map((_, i) => {
-    const a = i * DECK_SEG - DECK_T; //   enter starts (below, dim)
-    const b = i * DECK_SEG; //            seated dead-centre
-    const c = (i + 1) * DECK_SEG - DECK_T; // exit starts
-    const d = (i + 1) * DECK_SEG; //      gone
-    const first = i === 0; //  starts seated — no enter phase (its `a` would be
-    //                         NEGATIVE, and framer forwards these inputs as
-    //                         WAAPI offsets, which must live in [0, 1])
-    const last = i === N - 1; // final card holds to the end — no exit phase
-    const inp = first ? [b, c, d] : last ? [a, b] : [a, b, c, d];
-    /* eslint-disable react-hooks/rules-of-hooks -- fixed-length map, stable order */
-    return {
-      y: useTransform(scrollYProgress, inp, first ? ["0vh", "0vh", "-12vh"] : last ? ["10vh", "0vh"] : ["10vh", "0vh", "0vh", "-12vh"]),
-      rotate: useTransform(scrollYProgress, inp, first ? [0, 0, -6] : last ? [0, 0] : [0, 0, 0, -6]),
-      scale: useTransform(scrollYProgress, inp, first ? [1, 1, 0.92] : last ? [0.94, 1] : [0.94, 1, 1, 0.92]),
-      opacity: useTransform(scrollYProgress, inp, first ? [1, 1, 0] : last ? [0, 1] : [0, 1, 1, 0]),
-    };
-    /* eslint-enable react-hooks/rules-of-hooks */
-  });
+  const railRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            const idx = Number((e.target as HTMLElement).dataset.idx ?? 0);
+            setMActive(idx);
+          }
+        });
+      },
+      { root: rail, threshold: 0.6 }
+    );
+    rail.querySelectorAll("[data-idx]").forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, [isMobile]);
 
   const entry = SHOWCASE[active];
 
@@ -160,78 +148,83 @@ export function ShowcaseSection() {
     );
   }
 
-  // mobile: the WebGL arc can't shrink to a phone — swap to a scroll-driven
-  // stacked deck. Lenis runs native on touch, so plain vertical scroll drives
-  // the handoffs (no swipe-gesture conflicts). Cards stack in one grid cell;
-  // zIndex N-i keeps upcoming cards beneath. i>0 get an opacity-0 class as
-  // the no-JS fallback (motion's inline style overrides it), so the first
-  // card is always readable even if transforms never run.
+  // mobile: the WebGL arc can't shrink to a phone — swap to a native
+  // snap-swipe carousel with neighbour peek (the standard mobile pattern:
+  // scroll-snap composites off-main-thread and inherits platform momentum —
+  // scroll-driven card choreography proved unreliable on real phones). The
+  // active card sits full-strength while neighbours peek in, slightly
+  // shrunk + dimmed; an IO on the cards drives the caption/counter swap.
   if (isMobile) {
     return (
-      <section ref={ref} className="relative h-[320svh] bg-paper">
-        <div className="sticky top-0 flex h-[100svh] flex-col overflow-hidden">
-          {/* kicker */}
-          <p className="pt-12 text-center font-mono text-micro uppercase tracking-[0.3em] text-ink-soft">
-            What I can build <span className="text-accent">for you</span>
-          </p>
+      <section ref={ref} className="bg-paper py-[var(--section-gap)]">
+        <p className="px-[var(--edge)] font-mono text-micro uppercase tracking-[0.3em] text-ink-soft">
+          What I can build <span className="text-accent">for you</span>
+        </p>
 
-          {/* the deck */}
-          <div className="relative grid flex-1 place-items-center">
-            {SHOWCASE.map((s, i) => (
-              <motion.div
-                key={s.label}
-                style={{ ...deck[i], zIndex: N - i }}
-                className={`relative flex aspect-[16/11] w-[88vw] flex-col justify-end overflow-hidden rounded-xl border border-line p-5 will-change-transform [grid-area:1/1]${
-                  i > 0 ? " opacity-0" : ""
-                }`}
-              >
-                <span
-                  aria-hidden
-                  className="absolute inset-0 -z-10"
-                  style={{ background: `linear-gradient(120deg, ${s.tint} 0%, #14120f 100%)` }}
-                />
-                <span className="font-mono text-micro uppercase tracking-[0.25em] text-[#e8a24a]">
-                  {s.tag}
-                </span>
-                <h3 className="font-display mt-2 text-2xl font-extrabold uppercase leading-none text-[#f6f1e7]">
-                  {s.label}
-                </h3>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {s.tech.map((t) => (
-                    <span
-                      key={t}
-                      className="rounded-full border border-[#f6f1e7]/40 px-2.5 py-1 font-mono text-micro text-[#f6f1e7]"
-                    >
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* active card caption + counter — mirrors the desktop swap */}
-          <div className="flex items-end justify-between gap-4 px-[var(--edge)] pb-10">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={mActive}
-                initial={{ y: 16, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: -12, opacity: 0 }}
-                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <span className="font-mono text-micro uppercase tracking-[0.25em] text-accent-2">
-                  {SHOWCASE[mActive].tag}
-                </span>
-                <p className="mt-1 max-w-[38ch] text-small text-ink-soft">
-                  {SHOWCASE[mActive].metric}
-                </p>
-              </motion.div>
-            </AnimatePresence>
-            <div className="flex shrink-0 items-baseline gap-1 font-mono text-small text-ink-soft">
-              <span className="text-accent-2">{String(mActive + 1).padStart(2, "0")}</span>
-              <span>/ {String(N).padStart(2, "0")}</span>
+        {/* the rail — 78vw cards, 11vw side padding = both neighbours peek */}
+        <div
+          ref={railRef}
+          className="mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[11vw] pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {SHOWCASE.map((s, i) => (
+            <div
+              key={s.label}
+              data-idx={i}
+              className={`relative flex aspect-[16/11] w-[78vw] shrink-0 snap-center flex-col justify-end overflow-hidden rounded-xl border border-line p-5 transition-[transform,opacity] duration-300 ease-out ${
+                i === mActive ? "scale-100 opacity-100" : "scale-[0.93] opacity-60"
+              }`}
+              style={{ background: `linear-gradient(120deg, ${s.tint} 0%, #14120f 100%)` }}
+            >
+              <span className="font-mono text-micro uppercase tracking-[0.25em] text-[#e8a24a]">
+                {s.tag}
+              </span>
+              <h3 className="font-display mt-2 text-2xl font-extrabold uppercase leading-none text-[#f6f1e7]">
+                {s.label}
+              </h3>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {s.tech.map((t) => (
+                  <span
+                    key={t}
+                    className="rounded-full border border-[#f6f1e7]/40 px-2.5 py-1 font-mono text-micro text-[#f6f1e7]"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+              <span className="absolute right-3 top-3 rounded-full bg-black/50 px-2.5 py-1 font-mono text-micro text-white/80">
+                {String(i + 1).padStart(2, "0")}/{String(N).padStart(2, "0")}
+              </span>
             </div>
+          ))}
+        </div>
+
+        {/* active card caption + progress — mirrors the desktop swap */}
+        <div className="mt-5 flex items-end justify-between gap-4 px-[var(--edge)]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={mActive}
+              initial={{ y: 14, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -10, opacity: 0 }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <span className="font-mono text-micro uppercase tracking-[0.25em] text-accent-2">
+                {SHOWCASE[mActive].tag}
+              </span>
+              <p className="mt-1 max-w-[38ch] text-small text-ink-soft">
+                {SHOWCASE[mActive].metric}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+          <div className="flex shrink-0 items-center gap-1.5 pb-1">
+            {SHOWCASE.map((s, i) => (
+              <span
+                key={s.label}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === mActive ? "w-5 bg-accent" : "w-1.5 bg-ink/25"
+                }`}
+              />
+            ))}
           </div>
         </div>
       </section>
