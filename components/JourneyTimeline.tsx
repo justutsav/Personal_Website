@@ -508,7 +508,9 @@ export function JourneyTimeline() {
           <p className="mb-4 font-mono text-micro uppercase tracking-[0.35em] text-accent">
             and that&apos;s the through-line
           </p>
-          <h2 className="font-display mx-auto max-w-[18ch] text-[clamp(1.4rem,6vw,2.2rem)] font-extrabold uppercase leading-[1.02] text-ink-on-panel">
+          {/* text-ink (light) — the card bg is dark; ink-on-panel here was
+              black-on-black and vanished */}
+          <h2 className="font-display mx-auto max-w-[18ch] text-[clamp(1.4rem,6vw,2.2rem)] font-extrabold uppercase leading-[1.02] text-ink">
             Real businesses run on <span className="text-accent">my code.</span>
           </h2>
         </div>

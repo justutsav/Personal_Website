@@ -12,7 +12,7 @@ import {
   MeshBasicMaterial,
   PlaneGeometry,
 } from "three";
-import { SHOWCASE, SPACING, type Service } from "@/components/showcaseData";
+import { SHOWCASE, SPACING, darken, type Service } from "@/components/showcaseData";
 
 /* The WebGL half of the showcase. Lives in its own module so ShowcaseSection
  * can next/dynamic-import it — three + R3F (~150KB gzip) stay out of the
@@ -55,16 +55,6 @@ function lighten(hex: string, t: number) {
   const r = Math.round(((n >> 16) & 255) + (255 - ((n >> 16) & 255)) * t);
   const g = Math.round(((n >> 8) & 255) + (255 - ((n >> 8) & 255)) * t);
   const b = Math.round((n & 255) + (255 - (n & 255)) * t);
-  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
-}
-/** darken a hex toward the page background (#0e0d0b) by t (0..1) — keeps the
- * flat card colours in the same warm near-black family as their surroundings */
-function darken(hex: string, t: number) {
-  const n = parseInt(hex.slice(1), 16);
-  const mix = (c: number, b: number) => Math.round(c + (b - c) * t);
-  const r = mix((n >> 16) & 255, 0x0e);
-  const g = mix((n >> 8) & 255, 0x0d);
-  const b = mix(n & 255, 0x0b);
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 }
 /** reusable rounded-rect path */

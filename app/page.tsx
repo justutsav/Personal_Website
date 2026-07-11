@@ -84,15 +84,16 @@ export default function Home() {
 
         {/* ---- Private-code band: slides up over the held outro screen ---- */}
         <section id="private-band" className="relative z-10 bg-panel-ink px-[var(--edge)] py-[var(--section-gap)] text-ink-on-panel md:-mt-[20vh]">
-          <div className="grid gap-10 md:grid-cols-[1fr_1fr]">
+          {/* centred on mobile, two-column editorial split from md up */}
+          <div className="grid gap-10 text-center md:grid-cols-[1fr_1fr] md:text-left">
             <Reveal>
-              <h2 className="font-display max-w-[16ch] text-[length:var(--text-h1)] font-extrabold uppercase">
+              <h2 className="font-display mx-auto max-w-[16ch] text-[length:var(--text-h1)] font-extrabold uppercase md:mx-0">
                 The code is private. The results aren&apos;t.
               </h2>
             </Reveal>
             <Reveal delay={0.15}>
               <div className="self-end">
-                <p className="text-ink-soft-on-panel max-w-[52ch]">
+                <p className="text-ink-soft-on-panel mx-auto max-w-[52ch] md:mx-0">
                   Most of my repos run live businesses with real money in them —
                   they can&apos;t be public. So the proof is the kind that
                   matters: numbers, screenshots, and people who use the software

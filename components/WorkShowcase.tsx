@@ -379,6 +379,19 @@ export function WorkShowcase({
   // deck runs on the remaining scroll after the intro
   const deckProgress = useTransform(scrollYProgress, [introEnd, 1], [0, 1]);
 
+  // mobile intro: same grow-in box, but the runway is INTRO_VH + one screen —
+  // once the overlay slides off, the stage holds for that screen then scrolls
+  // away naturally with the swipe stack seated inside it. Unlike desktop the
+  // overlay is pulled DOWN off-screen, so the deck is unveiled from the top.
+  const introEndM = INTRO_VH / (INTRO_VH + 100);
+  const boxScaleM = useTransform(scrollYProgress, [0, introEndM * 0.62], [0.6, 1.12]);
+  const boxRadiusM = useTransform(scrollYProgress, [0, introEndM * 0.55], [40, 0]);
+  const introYM = useTransform(
+    scrollYProgress,
+    [introEndM * 0.78, introEndM],
+    ["0vh", "115vh"]
+  );
+
   const [swipeIndex, setSwipeIndex] = useState(0);
   const [swipeExit, setSwipeExit] = useState(0);
   const swipeX = useMotionValue(0);
@@ -431,36 +444,38 @@ export function WorkShowcase({
       };
     });
 
-    // blackish, like the desktop deck box — the cream world scrolls away and
-    // this dark room slides up (rounded top + negative margin), music
-    // latching via the marker as it enters
+    // same intro as desktop: the "Selected work" box grows to full-bleed over
+    // a pinned stage, then the whole overlay slides up to reveal the dark room
+    // holding the swipeable stack; music latches via the marker as it enters
     return (
-      <section
-        id="work"
-        className="relative -mt-6 rounded-t-3xl bg-[#101010] px-[var(--edge)] py-[var(--section-gap)] shadow-[0_-24px_60px_rgba(0,0,0,0.45)]"
-      >
+      // panel-ink (cream) so the subpixel sliver at the section's top edge
+      // matches the stats section above — bg-paper (dark) showed as a 1px seam
+      <section id="work" className="bg-panel-ink">
+        <div
+          ref={ref}
+          className="relative"
+          style={{ height: `calc(${INTRO_VH}vh + 100svh)` }}
+        >
         {/* reached-latch marker — MusicProvider's startIO needs it on mobile too */}
         <div id="work-open" aria-hidden className="pointer-events-none absolute left-0 h-px w-px" style={{ top: "6%" }} />
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        >
+        {/* pb clears the fixed music bar pinned to the viewport bottom */}
+        <div className="sticky top-0 flex h-svh flex-col overflow-hidden bg-[#101010] px-[var(--edge)] pb-24 pt-16">
+        {/* slim label — the intro overlay already announced the section full-screen */}
+        <div className="flex items-baseline justify-between">
           <p className="font-mono text-micro uppercase tracking-[0.35em] text-accent">
             Portfolio
           </p>
-          <h2 className="font-display mt-3 text-[clamp(2.2rem,10vw,3.5rem)] font-extrabold uppercase leading-[0.95] text-ink">
+          <p className="font-mono text-micro uppercase tracking-[0.25em] text-ink-soft">
             Selected work
-          </h2>
-        </motion.div>
+          </p>
+        </div>
 
         <motion.div
           initial={{ opacity: 0, scale: 0.96, y: 24 }}
           whileInView={{ opacity: 1, scale: 1, y: 0 }}
           viewport={{ once: true, amount: 0.2 }}
           transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
-          className="relative mt-10 h-[72svh]"
+          className="relative mt-6 min-h-0 flex-1"
         >
           {stack.map(({ p, n, depth, cycle }) => {
             const pal = PALETTES[p.slug] ?? FALLBACK;
@@ -577,7 +592,7 @@ export function WorkShowcase({
           })}
         </motion.div>
 
-        <div className="mt-8 flex flex-col items-center gap-3">
+        <div className="mt-5 flex flex-col items-center gap-3">
           <div className="flex items-center gap-2">
             {projects.map((p, i) => (
               <span
@@ -594,6 +609,30 @@ export function WorkShowcase({
             </span>
             <span className="opacity-60">swipe · tap to open</span>
           </div>
+        </div>
+
+        {/* intro: solid cream panel with the growing "Selected work" box;
+            slides up as one opaque unit to reveal the stack — mirrors desktop */}
+        <motion.div
+          style={{ y: introYM, zIndex: 3000 }}
+          className="absolute inset-0 flex items-center justify-center overflow-hidden bg-panel-ink"
+        >
+          <motion.div
+            style={{ scale: boxScaleM, borderRadius: boxRadiusM }}
+            className="absolute inset-0 flex items-center justify-center overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-paper" />
+            <div className="relative text-center">
+              <p className="font-mono text-micro uppercase tracking-[0.35em] text-accent">
+                Portfolio
+              </p>
+              <h2 className="font-display mt-4 text-[clamp(2.5rem,9vw,8rem)] font-extrabold uppercase leading-[0.9] text-ink">
+                Selected<br />work
+              </h2>
+            </div>
+          </motion.div>
+        </motion.div>
+        </div>
         </div>
       </section>
     );

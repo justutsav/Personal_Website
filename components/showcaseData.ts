@@ -53,6 +53,18 @@ export const SHOWCASE: Service[] = [
   },
 ];
 
+/** darken a hex toward the page background (#0e0d0b) by t (0..1) — keeps the
+ * flat card colours in the same warm near-black family as their surroundings.
+ * Shared by the WebGL card texture (desktop) and the CSS band pattern (mobile). */
+export function darken(hex: string, t: number) {
+  const n = parseInt(hex.slice(1), 16);
+  const mix = (c: number, b: number) => Math.round(c + (b - c) * t);
+  const r = mix((n >> 16) & 255, 0x0e);
+  const g = mix((n >> 8) & 255, 0x0d);
+  const b = mix(n & 255, 0x0b);
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
 export const N = SHOWCASE.length;
 /** angular gap between cards — wider than a closed ring so neighbours
  * sit half off-screen */

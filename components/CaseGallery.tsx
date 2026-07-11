@@ -49,16 +49,11 @@ export function CaseGallery({ slug, name }: { slug: string; name: string }) {
 
   if (items.length === 0) {
     return (
-      <figure className="my-16 border border-line rounded-sm aspect-[16/10] flex items-center justify-center bg-paper-raised">
-        <figcaption className="text-center px-8">
-          <span className="font-display text-[length:var(--text-h3)] text-ink-soft">
-            {name} — screenshots coming soon
-          </span>
-          <span className="block mt-2 font-mono text-micro text-ink-soft">
-            drop images into /public/projects/{slug}/
-          </span>
-        </figcaption>
-      </figure>
+      <p className="my-16 max-w-[52ch] font-mono text-small leading-relaxed text-ink-soft">
+        No screenshots for {name} — it runs a live business on private data,
+        so the visuals stay behind closed doors. The numbers are the proof
+        that matters.
+      </p>
     );
   }
 

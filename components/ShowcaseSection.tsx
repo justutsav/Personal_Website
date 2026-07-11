@@ -13,7 +13,7 @@ import {
   useVelocity,
 } from "framer-motion";
 import { MOBILE_QUERY, useMediaQuery } from "@/components/useMediaQuery";
-import { SHOWCASE, N, SPACING } from "@/components/showcaseData";
+import { SHOWCASE, N, SPACING, darken } from "@/components/showcaseData";
 
 /** WebGL arc loads on demand (client-only) — keeps three/R3F out of the main
  * bundle entirely; mobile never fetches it since its branch never renders it */
@@ -101,28 +101,30 @@ export function ShowcaseSection() {
   // same hysteresis index as the 3D snap so the caption flips with the card
   useMotionValueEvent(scrollYProgress, "change", (p) => setActive(snapIndex(p)));
 
-  // mobile: active card index, reported by an IntersectionObserver on the
-  // snap-carousel cards (the industry-standard mobile pattern — native
-  // scroll-snap composites off-main-thread and inherits platform momentum;
-  // scroll-driven transforms proved unreliable on real phones)
+  // mobile: active card = the one whose centre is nearest the rail's centre,
+  // recomputed on every rail scroll (an IntersectionObserver version silently
+  // stopped firing on real phones — plain scrollLeft math can't)
   const [mActive, setMActive] = useState(0);
   const railRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const rail = railRef.current;
     if (!rail) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            const idx = Number((e.target as HTMLElement).dataset.idx ?? 0);
-            setMActive(idx);
-          }
-        });
-      },
-      { root: rail, threshold: 0.6 }
-    );
-    rail.querySelectorAll("[data-idx]").forEach((el) => io.observe(el));
-    return () => io.disconnect();
+    const onScroll = () => {
+      const mid = rail.scrollLeft + rail.clientWidth / 2;
+      let best = 0;
+      let bestDist = Infinity;
+      rail.querySelectorAll<HTMLElement>("[data-idx]").forEach((card) => {
+        const d = Math.abs(card.offsetLeft + card.offsetWidth / 2 - mid);
+        if (d < bestDist) {
+          bestDist = d;
+          best = Number(card.dataset.idx ?? 0);
+        }
+      });
+      setMActive(best);
+    };
+    rail.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => rail.removeEventListener("scroll", onScroll);
   }, [isMobile]);
 
   const entry = SHOWCASE[active];
@@ -156,75 +158,111 @@ export function ShowcaseSection() {
   // shrunk + dimmed; an IO on the cards drives the caption/counter swap.
   if (isMobile) {
     return (
-      <section ref={ref} className="bg-paper py-[var(--section-gap)]">
-        <p className="px-[var(--edge)] font-mono text-micro uppercase tracking-[0.3em] text-ink-soft">
-          What I can build <span className="text-accent">for you</span>
-        </p>
+      <section ref={ref} className="bg-paper">
+        {/* runway taller than one screen — the stage pins for the extra 60vh
+            so the section asks for a beat of scroll before letting you past */}
+        <div className="relative" style={{ height: "calc(100svh + 60vh)" }}>
+          <div className="sticky top-0 flex h-svh flex-col overflow-hidden pb-24 pt-16">
+            {/* kicker — top-centre, mirrors desktop */}
+            <p className="text-center font-mono text-micro uppercase tracking-[0.3em] text-ink-soft">
+              What I can build <span className="text-accent">for you</span>
+            </p>
 
-        {/* the rail — 78vw cards, 11vw side padding = both neighbours peek */}
-        <div
-          ref={railRef}
-          className="mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[11vw] pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          {SHOWCASE.map((s, i) => (
-            <div
-              key={s.label}
-              data-idx={i}
-              className={`relative flex aspect-[16/11] w-[78vw] shrink-0 snap-center flex-col justify-end overflow-hidden rounded-xl border border-line p-5 transition-[transform,opacity] duration-300 ease-out ${
-                i === mActive ? "scale-100 opacity-100" : "scale-[0.93] opacity-60"
-              }`}
-              style={{ background: `linear-gradient(120deg, ${s.tint} 0%, #14120f 100%)` }}
-            >
-              <span className="font-mono text-micro uppercase tracking-[0.25em] text-[#e8a24a]">
-                {s.tag}
-              </span>
-              <h3 className="font-display mt-2 text-2xl font-extrabold uppercase leading-none text-[#f6f1e7]">
-                {s.label}
-              </h3>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {s.tech.map((t) => (
-                  <span
-                    key={t}
-                    className="rounded-full border border-[#f6f1e7]/40 px-2.5 py-1 font-mono text-micro text-[#f6f1e7]"
-                  >
-                    {t}
-                  </span>
-                ))}
+            {/* cards + caption vertically centred in the stage */}
+            <div className="flex min-h-0 flex-1 flex-col justify-center">
+              {/* the rail — 78vw cards, 11vw side padding = both neighbours peek */}
+              <div
+                ref={railRef}
+                className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-[11vw] py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              >
+                {SHOWCASE.map((s, i) => {
+                  // same two-tone vertical bands as the desktop card texture:
+                  // base = darkened tint, alternating slightly-lighter bands
+                  const darkC = darken(s.tint, 0.5);
+                  const liteC = darken(s.tint, 0.32);
+                  return (
+                    <div
+                      key={s.label}
+                      data-idx={i}
+                      className={`relative flex aspect-[4/3] w-[78vw] shrink-0 snap-center flex-col items-center justify-center overflow-hidden rounded-xl p-5 text-center transition-[transform,opacity] duration-300 ease-out ${
+                        i === mActive ? "scale-100 opacity-100" : "scale-[0.93] opacity-60"
+                      }`}
+                      style={{
+                        background: `repeating-linear-gradient(90deg, ${liteC} 0, ${liteC} 10%, ${darkC} 10%, ${darkC} 20%)`,
+                        boxShadow: "inset 0 0 0 1px rgba(242,237,226,0.22)",
+                      }}
+                    >
+                      <span className="font-mono text-micro uppercase tracking-[0.25em] text-[#e8a24a]">
+                        {s.tag}
+                      </span>
+                      <h3 className="font-display mt-2 text-2xl font-extrabold uppercase leading-none text-[#f6f1e7]">
+                        {s.label}
+                      </h3>
+                      <div className="mt-4 flex flex-wrap justify-center gap-2">
+                        {s.tech.map((t) => (
+                          <span
+                            key={t}
+                            className="rounded-full border border-[#f6f1e7]/40 px-2.5 py-1 font-mono text-micro text-[#f6f1e7]"
+                          >
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              <span className="absolute right-3 top-3 rounded-full bg-black/50 px-2.5 py-1 font-mono text-micro text-white/80">
-                {String(i + 1).padStart(2, "0")}/{String(N).padStart(2, "0")}
-              </span>
-            </div>
-          ))}
-        </div>
 
-        {/* active card caption + progress — mirrors the desktop swap */}
-        <div className="mt-5 flex items-end justify-between gap-4 px-[var(--edge)]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={mActive}
-              initial={{ y: 14, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -10, opacity: 0 }}
-              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <span className="font-mono text-micro uppercase tracking-[0.25em] text-accent-2">
-                {SHOWCASE[mActive].tag}
-              </span>
-              <p className="mt-1 max-w-[38ch] text-small text-ink-soft">
-                {SHOWCASE[mActive].metric}
-              </p>
-            </motion.div>
-          </AnimatePresence>
-          <div className="flex shrink-0 items-center gap-1.5 pb-1">
-            {SHOWCASE.map((s, i) => (
-              <span
-                key={s.label}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i === mActive ? "w-5 bg-accent" : "w-1.5 bg-ink/25"
-                }`}
-              />
-            ))}
+              {/* active card caption — centred; fixed height so swaps don't jump */}
+              <div className="mt-6 flex min-h-[6rem] justify-center px-[var(--edge)]">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={mActive}
+                    initial={{ y: 14, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -10, opacity: 0 }}
+                    transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                    className="text-center"
+                  >
+                    <span className="font-mono text-micro uppercase tracking-[0.25em] text-accent-2">
+                      {SHOWCASE[mActive].tag}
+                    </span>
+                    <p className="mx-auto mt-1 max-w-[38ch] text-small text-ink-soft">
+                      {SHOWCASE[mActive].metric}
+                    </p>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* progress — counter + dots together at the bottom of the stage */}
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex items-center justify-center gap-4">
+                <span className="font-mono text-small text-ink-soft">
+                  <span className="text-accent-2">{String(mActive + 1).padStart(2, "0")}</span>{" "}
+                  / {String(N).padStart(2, "0")}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  {SHOWCASE.map((s, i) => (
+                    <span
+                      key={s.label}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        i === mActive ? "w-5 bg-accent" : "w-1.5 bg-ink/25"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+              {/* fixed-height slot so the hint doesn't shift the row when it
+                  appears — nudges visitors onward once the last card is seen */}
+              <motion.p
+                animate={{ opacity: mActive === N - 1 ? 1 : 0 }}
+                transition={{ duration: 0.3 }}
+                className="h-4 whitespace-nowrap font-mono text-micro uppercase tracking-[0.2em] text-accent"
+              >
+                scroll for more ↓
+              </motion.p>
+            </div>
           </div>
         </div>
       </section>
