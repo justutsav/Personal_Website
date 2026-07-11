@@ -101,6 +101,42 @@ export function ShowcaseSection() {
   // same hysteresis index as the 3D snap so the caption flips with the card
   useMotionValueEvent(scrollYProgress, "change", (p) => setActive(snapIndex(p)));
 
+  // mobile deck index — plain floor over N equal segments (flips exactly where
+  // a handoff completes); desktop keeps its own hysteresis `active` above.
+  // `ref` attaches to whichever branch renders, so scrollYProgress just works.
+  const [mActive, setMActive] = useState(0);
+  useMotionValueEvent(scrollYProgress, "change", (p) =>
+    setMActive(Math.min(N - 1, Math.max(0, Math.floor(p * N))))
+  );
+
+  // mobile deck: per-card transform tracks. Each card seats in segment
+  // [i, i+1]/N of progress; the last DECK_T of a segment is the handoff — the
+  // outgoing card lifts (-12vh), tilts (-6°), shrinks and fades while the
+  // incoming one rises from +10vh / 0.94 beneath. Transform + opacity only
+  // (no blur / animated shadow — low-end Android). SHOWCASE is a module
+  // constant, so the hook count in this loop is stable across renders.
+  const DECK_SEG = 1 / N;
+  const DECK_T = DECK_SEG * 0.4;
+  const deck = SHOWCASE.map((_, i) => {
+    const a = i * DECK_SEG - DECK_T; //   enter starts (below, dim)
+    const b = i * DECK_SEG; //            seated dead-centre
+    const c = (i + 1) * DECK_SEG - DECK_T; // exit starts
+    const d = (i + 1) * DECK_SEG; //      gone
+    const first = i === 0; //  starts seated — no enter phase (its `a` would be
+    //                         NEGATIVE, and framer forwards these inputs as
+    //                         WAAPI offsets, which must live in [0, 1])
+    const last = i === N - 1; // final card holds to the end — no exit phase
+    const inp = first ? [b, c, d] : last ? [a, b] : [a, b, c, d];
+    /* eslint-disable react-hooks/rules-of-hooks -- fixed-length map, stable order */
+    return {
+      y: useTransform(scrollYProgress, inp, first ? ["0vh", "0vh", "-12vh"] : last ? ["10vh", "0vh"] : ["10vh", "0vh", "0vh", "-12vh"]),
+      rotate: useTransform(scrollYProgress, inp, first ? [0, 0, -6] : last ? [0, 0] : [0, 0, 0, -6]),
+      scale: useTransform(scrollYProgress, inp, first ? [1, 1, 0.92] : last ? [0.94, 1] : [0.94, 1, 1, 0.92]),
+      opacity: useTransform(scrollYProgress, inp, first ? [1, 1, 0] : last ? [0, 1] : [0, 1, 1, 0]),
+    };
+    /* eslint-enable react-hooks/rules-of-hooks */
+  });
+
   const entry = SHOWCASE[active];
 
   if (reduce) {
@@ -124,21 +160,36 @@ export function ShowcaseSection() {
     );
   }
 
-  // mobile: the WebGL arc can't shrink to a phone — swap to a horizontal
-  // snap-swipe cover carousel with the same entries and captions
+  // mobile: the WebGL arc can't shrink to a phone — swap to a scroll-driven
+  // stacked deck. Lenis runs native on touch, so plain vertical scroll drives
+  // the handoffs (no swipe-gesture conflicts). Cards stack in one grid cell;
+  // zIndex N-i keeps upcoming cards beneath. i>0 get an opacity-0 class as
+  // the no-JS fallback (motion's inline style overrides it), so the first
+  // card is always readable even if transforms never run.
   if (isMobile) {
     return (
-      <section className="bg-paper py-[var(--section-gap)]">
-        <p className="px-[var(--edge)] font-mono text-micro uppercase tracking-[0.3em] text-ink-soft">
-          What I can build <span className="text-accent">for you</span>
-        </p>
-        <div className="mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-[var(--edge)] pb-4">
-          {SHOWCASE.map((s, i) => (
-            <figure key={s.label} className="w-[82vw] shrink-0 snap-center">
-              <div
-                className="relative flex aspect-[16/10] flex-col justify-end overflow-hidden rounded-xl border border-line p-5"
-                style={{ background: `linear-gradient(120deg, ${s.tint} 0%, #14120f 100%)` }}
+      <section ref={ref} className="relative h-[320svh] bg-paper">
+        <div className="sticky top-0 flex h-[100svh] flex-col overflow-hidden">
+          {/* kicker */}
+          <p className="pt-12 text-center font-mono text-micro uppercase tracking-[0.3em] text-ink-soft">
+            What I can build <span className="text-accent">for you</span>
+          </p>
+
+          {/* the deck */}
+          <div className="relative grid flex-1 place-items-center">
+            {SHOWCASE.map((s, i) => (
+              <motion.div
+                key={s.label}
+                style={{ ...deck[i], zIndex: N - i }}
+                className={`relative flex aspect-[16/11] w-[88vw] flex-col justify-end overflow-hidden rounded-xl border border-line p-5 will-change-transform [grid-area:1/1]${
+                  i > 0 ? " opacity-0" : ""
+                }`}
               >
+                <span
+                  aria-hidden
+                  className="absolute inset-0 -z-10"
+                  style={{ background: `linear-gradient(120deg, ${s.tint} 0%, #14120f 100%)` }}
+                />
                 <span className="font-mono text-micro uppercase tracking-[0.25em] text-[#e8a24a]">
                   {s.tag}
                 </span>
@@ -155,19 +206,34 @@ export function ShowcaseSection() {
                     </span>
                   ))}
                 </div>
-                <span className="absolute right-3 top-3 rounded-full bg-black/50 px-2.5 py-1 font-mono text-micro text-white/80">
-                  {String(i + 1).padStart(2, "0")}/{String(N).padStart(2, "0")}
+              </motion.div>
+            ))}
+          </div>
+
+          {/* active card caption + counter — mirrors the desktop swap */}
+          <div className="flex items-end justify-between gap-4 px-[var(--edge)] pb-10">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={mActive}
+                initial={{ y: 16, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -12, opacity: 0 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <span className="font-mono text-micro uppercase tracking-[0.25em] text-accent-2">
+                  {SHOWCASE[mActive].tag}
                 </span>
-              </div>
-              <figcaption className="mt-3">
-                <p className="text-small text-ink-soft">{s.metric}</p>
-              </figcaption>
-            </figure>
-          ))}
+                <p className="mt-1 max-w-[38ch] text-small text-ink-soft">
+                  {SHOWCASE[mActive].metric}
+                </p>
+              </motion.div>
+            </AnimatePresence>
+            <div className="flex shrink-0 items-baseline gap-1 font-mono text-small text-ink-soft">
+              <span className="text-accent-2">{String(mActive + 1).padStart(2, "0")}</span>
+              <span>/ {String(N).padStart(2, "0")}</span>
+            </div>
+          </div>
         </div>
-        <p className="mt-2 px-[var(--edge)] font-mono text-micro uppercase tracking-widest text-ink-soft opacity-70">
-          swipe →
-        </p>
       </section>
     );
   }

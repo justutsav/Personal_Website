@@ -356,7 +356,7 @@ export function JourneyTimeline() {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => setVw(window.innerWidth));
     };
-    setVw(window.innerWidth);
+    measure(); // initial read goes through the same rAF path (no sync setState in effect body)
     window.addEventListener("resize", measure);
     return () => {
       cancelAnimationFrame(raf);
@@ -444,45 +444,60 @@ export function JourneyTimeline() {
         </p>
 
         <div className="relative pl-7">
-          {/* spine */}
-          <span
+          {/* spine — draws top→down as the list enters */}
+          <motion.span
             aria-hidden
-            className="absolute bottom-2 left-[7px] top-2 w-px"
+            className="absolute bottom-2 left-[7px] top-2 w-px origin-top"
             style={{ background: "linear-gradient(to bottom, var(--accent), var(--accent-2))" }}
+            initial={reduce ? false : { scaleY: 0 }}
+            whileInView={{ scaleY: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
           />
           <ol className="space-y-8">
             {CHAPTERS.map((c, i) => (
               <li key={c.title} className="relative">
-                {/* dot */}
-                <span
+                {/* dot — spring pop just after its card settles */}
+                <motion.span
                   aria-hidden
                   className="absolute left-[-27px] top-1.5 h-[13px] w-[13px] rounded-full border-2"
                   style={{
                     borderColor: col(c.accent),
                     backgroundColor: c.spine ? col(c.accent) : "var(--paper)",
                   }}
+                  initial={reduce ? false : { scale: 0 }}
+                  whileInView={{ scale: 1 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{ type: "spring", stiffness: 320, damping: 16, delay: 0.12 + (i % 3) * 0.06 }}
                 />
-                <button
-                  type="button"
-                  onClick={() => setOpen(i)}
-                  className="w-full rounded-xl border border-line bg-paper-raised p-4 text-left"
+                <motion.div
+                  initial={reduce ? false : { opacity: 0, y: 28 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: (i % 3) * 0.06 }}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono text-[0.6rem] uppercase tracking-[0.24em]" style={{ color: col(c.accent) }}>
-                      {c.tag}
+                  <button
+                    type="button"
+                    onClick={() => setOpen(i)}
+                    className="w-full rounded-xl border border-line bg-paper-raised p-4 text-left"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-mono text-[0.6rem] uppercase tracking-[0.24em]" style={{ color: col(c.accent) }}>
+                        {c.tag}
+                      </span>
+                      <span className="font-mono text-[0.58rem] uppercase tracking-widest text-ink-soft">
+                        {c.year}
+                      </span>
+                    </div>
+                    <h3 className="font-display mt-2 text-[0.98rem] font-bold uppercase leading-[1.15]">
+                      {c.title}
+                    </h3>
+                    <p className="mt-2 text-[0.82rem] leading-relaxed text-ink-soft">{c.body}</p>
+                    <span className="mt-3 inline-flex items-center gap-1 font-mono text-[0.6rem] uppercase tracking-widest" style={{ color: col(c.accent) }}>
+                      read →
                     </span>
-                    <span className="font-mono text-[0.58rem] uppercase tracking-widest text-ink-soft">
-                      {c.year}
-                    </span>
-                  </div>
-                  <h3 className="font-display mt-2 text-[0.98rem] font-bold uppercase leading-[1.15]">
-                    {c.title}
-                  </h3>
-                  <p className="mt-2 text-[0.82rem] leading-relaxed text-ink-soft">{c.body}</p>
-                  <span className="mt-3 inline-flex items-center gap-1 font-mono text-[0.6rem] uppercase tracking-widest" style={{ color: col(c.accent) }}>
-                    read →
-                  </span>
-                </button>
+                  </button>
+                </motion.div>
               </li>
             ))}
           </ol>

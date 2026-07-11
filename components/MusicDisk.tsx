@@ -29,7 +29,8 @@ export function MusicDisk() {
     <AnimatePresence>
       {show && (
         <motion.div
-          className="fixed bottom-6 left-[var(--edge)] z-40 flex items-center gap-2"
+          className="fixed left-[var(--edge)] z-40 flex items-center gap-2"
+          style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 12 }}
@@ -39,7 +40,7 @@ export function MusicDisk() {
             <button
               onClick={prev}
               aria-label="Previous track"
-              className="-m-1 flex h-9 w-9 items-center justify-center rounded-full font-mono text-lg text-ink-soft transition-colors hover:bg-white/10 hover:text-accent"
+              className="-m-1 flex h-11 w-11 items-center justify-center rounded-full font-mono text-lg text-ink-soft transition-colors hover:bg-white/10 hover:text-accent"
             >
               ‹
             </button>
@@ -107,7 +108,7 @@ export function MusicDisk() {
             <button
               onClick={next}
               aria-label="Next track"
-              className="-m-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-mono text-lg text-ink-soft transition-colors hover:bg-white/10 hover:text-accent"
+              className="-m-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-mono text-lg text-ink-soft transition-colors hover:bg-white/10 hover:text-accent"
             >
               ›
             </button>

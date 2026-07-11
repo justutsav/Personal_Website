@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   motion,
   MotionValue,
+  useMotionValue,
   useReducedMotion,
   useScroll,
   useTransform,
@@ -378,6 +379,19 @@ export function WorkShowcase({
   // deck runs on the remaining scroll after the intro
   const deckProgress = useTransform(scrollYProgress, [introEnd, 1], [0, 1]);
 
+  const [swipeIndex, setSwipeIndex] = useState(0);
+  const [swipeExit, setSwipeExit] = useState(0);
+  const swipeX = useMotionValue(0);
+  const swipeRotate = useTransform(
+    swipeX,
+    [-480, -200, 0, 200, 480],
+    [-18, -12, 0, 12, 18]
+  );
+  const underScale = useTransform(swipeX, [-140, 0, 140], [1, 0.94, 1]);
+  const underY = useTransform(swipeX, [-140, 0, 140], [0, 16, 0]);
+  const underDim = useTransform(swipeX, [-140, 0, 140], [1, 0.88, 1]);
+  const tapStart = useRef({ x: 0, y: 0 });
+
   if (reduce) {
     return (
       <section id="work" className="bg-paper px-[var(--edge)] py-[var(--section-gap)]">
@@ -396,70 +410,180 @@ export function WorkShowcase({
     );
   }
 
-  // mobile: the pinned deck's fixed-size cards can't fit a phone — swap to
-  // simple stacked cards (cover + title + metrics), auto height, tap to open
+  // mobile: the pinned deck's fixed-size cards can't fit a phone — swap to a
+  // swipeable card stack (top 3 mounted); swipe to cycle, tap to open
   if (isMobile) {
+    const len = projects.length;
+    const active = swipeIndex % len;
+    const flyX =
+      swipeExit * (typeof window === "undefined" ? 480 : window.innerWidth) * 1.2;
+    const stack = [2, 1, 0].map((depth) => {
+      const pos = swipeIndex + depth;
+      return {
+        p: projects[pos % len],
+        n: pos % len,
+        depth,
+        cycle: Math.floor(pos / len),
+      };
+    });
+
     return (
-      <section id="work" className="bg-panel-ink px-[var(--edge)] py-[var(--section-gap)]">
-        <p className="font-mono text-micro uppercase tracking-[0.35em] text-accent">
-          Portfolio
-        </p>
-        <h2 className="font-display mt-3 mb-10 text-[clamp(2.2rem,10vw,3.5rem)] font-extrabold uppercase leading-[0.95] text-ink-on-panel">
-          Selected work
-        </h2>
-        <div className="space-y-6">
-          {projects.map((p, i) => {
+      <section id="work" className="relative bg-panel-ink px-[var(--edge)] py-[var(--section-gap)]">
+        {/* reached-latch marker — MusicProvider's startIO needs it on mobile too */}
+        <div id="work-open" aria-hidden className="pointer-events-none absolute left-0 h-px w-px" style={{ top: "6%" }} />
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <p className="font-mono text-micro uppercase tracking-[0.35em] text-accent">
+            Portfolio
+          </p>
+          <h2 className="font-display mt-3 text-[clamp(2.2rem,10vw,3.5rem)] font-extrabold uppercase leading-[0.95] text-ink-on-panel">
+            Selected work
+          </h2>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 24 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+          className="relative mt-10 h-[72svh]"
+        >
+          {stack.map(({ p, n, depth, cycle }) => {
             const pal = PALETTES[p.slug] ?? FALLBACK;
+            const isTop = depth === 0;
+            const isNext = depth === 1;
             return (
-              <article
-                key={p.slug}
-                onClick={() => {
-                  rememberReturn();
-                  router.push(`/work/${p.slug}`);
+              <motion.article
+                key={`${p.slug}-${cycle}-${isTop ? "top" : "under"}`}
+                drag={isTop && swipeExit === 0 ? "x" : false}
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.6}
+                dragMomentum={false}
+                onDragEnd={
+                  isTop
+                    ? (_, info) => {
+                        const dir =
+                          info.offset.x > 90 || info.velocity.x > 500
+                            ? 1
+                            : info.offset.x < -90 || info.velocity.x < -500
+                              ? -1
+                              : 0;
+                        if (dir) setSwipeExit(dir);
+                      }
+                    : undefined
+                }
+                animate={isTop && swipeExit !== 0 ? { x: flyX } : undefined}
+                transition={{ duration: 0.34, ease: [0.3, 0.7, 0.3, 1] }}
+                onAnimationComplete={
+                  isTop
+                    ? () => {
+                        if (swipeExit !== 0) {
+                          swipeX.set(0);
+                          setSwipeExit(0);
+                          setSwipeIndex((i) => i + 1);
+                        }
+                      }
+                    : undefined
+                }
+                onPointerDown={
+                  isTop
+                    ? (e) => {
+                        tapStart.current = { x: e.clientX, y: e.clientY };
+                      }
+                    : undefined
+                }
+                onClick={
+                  isTop
+                    ? (e) => {
+                        const dx = e.clientX - tapStart.current.x;
+                        const dy = e.clientY - tapStart.current.y;
+                        if (Math.hypot(dx, dy) < 8 && swipeExit === 0) {
+                          rememberReturn();
+                          router.push(`/work/${p.slug}`);
+                        }
+                      }
+                    : undefined
+                }
+                style={{
+                  backgroundColor: pal.bg,
+                  color: pal.ink,
+                  ...(isTop
+                    ? { x: swipeX, rotate: swipeRotate, zIndex: 3 }
+                    : isNext
+                      ? { scale: underScale, y: underY, opacity: underDim, zIndex: 2 }
+                      : { scale: 0.9, y: 26, opacity: 0.75, zIndex: 1 }),
                 }}
-                className="cursor-pointer overflow-hidden rounded-2xl p-5"
-                style={{ backgroundColor: pal.bg, color: pal.ink }}
+                className="absolute inset-0 flex select-none flex-col overflow-hidden rounded-2xl p-5"
               >
                 <div className="flex items-baseline justify-between gap-3">
-                  <span className="font-mono text-micro uppercase tracking-[0.2em]" style={{ color: pal.soft }}>
+                  <span
+                    className="font-mono text-micro uppercase tracking-[0.2em]"
+                    style={{ color: pal.soft }}
+                  >
                     {p.category} · {p.year}
                   </span>
                   <span className="font-mono text-micro" style={{ color: pal.soft }}>
-                    {String(i + 1).padStart(2, "0")}/{String(projects.length).padStart(2, "0")}
+                    {String(n + 1).padStart(2, "0")}/{String(len).padStart(2, "0")}
                   </span>
                 </div>
                 <Media
                   src={`/projects/${p.slug}/cover.webp`}
                   label={`${p.name} — cover`}
                   ink={pal.ink}
-                  className="mt-4 w-full"
-                  style={{ aspectRatio: coverAspects?.[p.slug] ?? 16 / 10, maxHeight: "60vh" }}
+                  className="pointer-events-none mt-4 min-h-0 w-full"
+                  style={{
+                    aspectRatio: coverAspects?.[p.slug] ?? 16 / 10,
+                    maxHeight: "38svh",
+                  }}
                 />
-                <h3 className="font-display mt-4 text-2xl font-extrabold uppercase leading-none">
+                <h3 className="font-display mt-4 text-3xl font-extrabold uppercase leading-none">
                   {p.name}
                 </h3>
-                <p className="mt-2 text-small" style={{ color: pal.soft }}>
-                  {p.tagline}
-                </p>
-                <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+                <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-1">
                   {p.metrics.slice(0, 3).map((m) => (
-                    <div key={m.label}>
-                      <dt className="font-display text-lg font-extrabold">{m.value}</dt>
-                      <dd className="font-mono text-micro uppercase tracking-wide" style={{ color: pal.soft }}>
+                    <div key={m.label} className="flex items-baseline gap-1.5">
+                      <dt className="font-display text-base font-extrabold">{m.value}</dt>
+                      <dd
+                        className="font-mono text-micro uppercase tracking-wide"
+                        style={{ color: pal.soft }}
+                      >
                         {m.label}
                       </dd>
                     </div>
                   ))}
                 </dl>
                 <span
-                  className="mt-4 inline-flex items-center gap-2 rounded-full border-2 px-5 py-2.5 font-mono text-micro uppercase tracking-widest"
-                  style={{ borderColor: pal.ink, color: pal.ink }}
+                  className="mt-auto pt-4 font-mono text-micro uppercase tracking-[0.25em]"
+                  style={{ color: pal.soft }}
                 >
-                  View case study →
+                  open case study →
                 </span>
-              </article>
+              </motion.article>
             );
           })}
+        </motion.div>
+
+        <div className="mt-8 flex flex-col items-center gap-3">
+          <div className="flex items-center gap-2">
+            {projects.map((p, i) => (
+              <span
+                key={p.slug}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === active ? "w-5 bg-accent" : "w-1.5 bg-ink-on-panel/25"
+                }`}
+              />
+            ))}
+          </div>
+          <div className="flex items-center gap-4 font-mono text-micro uppercase tracking-[0.25em] text-ink-on-panel">
+            <span>
+              {String(active + 1).padStart(2, "0")}/{String(len).padStart(2, "0")}
+            </span>
+            <span className="opacity-60">swipe · tap to open</span>
+          </div>
         </div>
       </section>
     );

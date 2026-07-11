@@ -51,3 +51,6 @@ hydra.tmp.mjs
 
 # generated knowledge-graph artifacts
 /graphify-out/
+
+# generated social banners
+/linkedin-banner.png

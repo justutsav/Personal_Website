@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import { usePathname } from "next/navigation";
+import { MOBILE_QUERY, useMediaQuery } from "@/components/useMediaQuery";
 
 /**
  * Single source of truth for the portfolio's background music. Lives in the
@@ -61,6 +62,9 @@ export function useMusic() {
 
 export function MusicProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  // mobile/desktop swap REMOUNTS the home sections after hydration — the zone
+  // observers below must rebind to the fresh DOM nodes or the disk never shows
+  const isMobileLayout = useMediaQuery(MOBILE_QUERY);
   const [reached, setReached] = useState(false); // persisted: nav bars visibility
   const [started, setStarted] = useState(false); // runtime only: audio may sound
   const [paused, setPaused] = useState(false);
@@ -123,6 +127,10 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
 
   // observe the Work/Timeline zone. Re-runs per route since the sections only
   // exist on the home page; elsewhere the zone is simply absent (→ low volume).
+  // The observed nodes get REPLACED after mount (StrictMode remounts, the
+  // mobile/desktop branch swap once useMediaQuery settles), and an IO bound to
+  // a detached node reports nothing forever — so instead of binding once, a
+  // light poll re-binds whenever any watched id resolves to a new element.
   useEffect(() => {
     const zone = new Map<string, boolean>();
     let priv = false;
@@ -135,11 +143,6 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       },
       { threshold: 0 }
     );
-    SECTIONS.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) zoneIO.observe(el);
-    });
-
     // latch "reached" once the Selected Work box scrolls into the top viewport
     const startIO = new IntersectionObserver(
       ([e]) => {
@@ -147,9 +150,6 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       },
       { rootMargin: "0px 0px -80% 0px" }
     );
-    const openMarker = document.getElementById("work-open");
-    if (openMarker) startIO.observe(openMarker);
-
     // private band = past the timeline → out of the full-volume zone
     const endIO = new IntersectionObserver(
       ([e]) => {
@@ -158,16 +158,43 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       },
       { threshold: 0, rootMargin: "0px 0px -6% 0px" }
     );
-    const pv = document.getElementById("private-band");
-    if (pv) endIO.observe(pv);
+
+    const bound = new Map<string, Element>();
+    const bind = () => {
+      let changed = false;
+      const want: [string, IntersectionObserver][] = [
+        ...SECTIONS.map((id): [string, IntersectionObserver] => [id, zoneIO]),
+        ["work-open", startIO],
+        ["private-band", endIO],
+      ];
+      for (const [id, io] of want) {
+        const el = document.getElementById(id);
+        const prev = bound.get(id);
+        if (el && el !== prev) {
+          if (prev) io.unobserve(prev);
+          io.observe(el);
+          bound.set(id, el);
+          changed = true;
+        } else if (!el && prev) {
+          io.unobserve(prev);
+          bound.delete(id);
+          zone.delete(id);
+          changed = true;
+        }
+      }
+      if (changed) update();
+    };
+    bind();
+    const poll = window.setInterval(bind, 1000);
 
     update();
     return () => {
+      window.clearInterval(poll);
       zoneIO.disconnect();
       startIO.disconnect();
       endIO.disconnect();
     };
-  }, [pathname]);
+  }, [pathname, isMobileLayout]);
 
   // music only begins once the user actually scrolls into the Work zone this
   // load (never on plain page load / refresh). `started` is NOT persisted.
