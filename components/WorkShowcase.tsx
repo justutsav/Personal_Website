@@ -370,10 +370,12 @@ export function WorkShowcase({
   // pure black. Nothing translucent ever sits over the cards.
   const boxScale = useTransform(scrollYProgress, [0, introEnd * 0.62], [0.6, 1.12]);
   const boxRadius = useTransform(scrollYProgress, [0, introEnd * 0.55], [40, 0]);
+  // overlay is pulled DOWN off-screen (like mobile) so the deck unveils
+  // from the top as you scroll
   const introY = useTransform(
     scrollYProgress,
     [introEnd * 0.78, introEnd],
-    ["0vh", "-115vh"]
+    ["0vh", "115vh"]
   );
 
   // deck runs on the remaining scroll after the intro
@@ -658,7 +660,7 @@ export function WorkShowcase({
             />
           ))}
 
-          {/* intro: solid cream panel with a growing black box; slides up as
+          {/* intro: solid cream panel with a growing black box; slides down as
               one opaque unit to reveal the deck. No fades, nothing translucent. */}
           <motion.div
             style={{ y: introY, zIndex: 3000 }}
