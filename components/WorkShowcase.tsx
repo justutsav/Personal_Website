@@ -390,8 +390,11 @@ export function WorkShowcase({
   // away naturally with the swipe stack seated inside it. Same asymmetric
   // exit as desktop: lifts up going forward, returns from below coming back.
   const introEndM = INTRO_VH / (INTRO_VH + 100);
-  const boxScaleM = useTransform(scrollYProgress, [0, introEndM * 0.62], [0.6, 1.12]);
-  const boxRadiusM = useTransform(scrollYProgress, [0, introEndM * 0.55], [40, 0]);
+  // full-bleed from the first frame (scale never drops below 1) so the intro
+  // owns the whole screen the moment the section engages — the old 0.6 start
+  // left a small box floating in cream that the user could scroll past. A
+  // gentle settle-zoom (1.08 → 1) keeps some life without any cream margin.
+  const boxScaleM = useTransform(scrollYProgress, [0, introEndM * 0.62], [1.08, 1]);
   const introDirM = useRef(-1);
   const introYM = useTransform(scrollYProgress, (p) => {
     const e = Math.min(Math.max((p - introEndM * 0.78) / (introEndM * 0.22), 0), 1);
@@ -626,7 +629,7 @@ export function WorkShowcase({
           className="absolute inset-0 flex items-center justify-center overflow-hidden bg-panel-ink"
         >
           <motion.div
-            style={{ scale: boxScaleM, borderRadius: boxRadiusM }}
+            style={{ scale: boxScaleM }}
             className="absolute inset-0 flex items-center justify-center overflow-hidden"
           >
             <div className="absolute inset-0 bg-paper" />
