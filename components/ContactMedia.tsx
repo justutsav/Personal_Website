@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { COARSE_QUERY, useMediaQuery } from "@/components/useMediaQuery";
 
 /**
  * Contact portrait as a halftone-dot rendering (cream dots on the page's
@@ -66,6 +67,9 @@ export function ContactMedia() {
   const [resolved, setResolved] = useState(false); // touch: tap toggles
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+  // no hover on touch devices → they need a nudge (echoes the hero's
+  // "give the video a tap"); desktop gets the cursor label instead
+  const coarse = useMediaQuery(COARSE_QUERY);
 
   // a cached photo fires `load` BEFORE React attaches onLoad — redraw here
   // whenever the image is already complete (also re-renders after HMR)
@@ -103,6 +107,15 @@ export function ContactMedia() {
               resolved ? "opacity-0" : "opacity-100 group-hover:opacity-0"
             }`}
           />
+          {coarse && (
+            <span
+              className={`pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap font-mono text-[0.6rem] uppercase tracking-[0.28em] text-ink-soft transition-opacity duration-500 ${
+                resolved ? "opacity-0" : "opacity-80"
+              }`}
+            >
+              give the portrait a tap
+            </span>
+          )}
         </div>
       ) : (
         <div

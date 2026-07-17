@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { preload } from "react-dom";
 import { Analytics } from "@vercel/analytics/next";
 import { Syne, Inter, Geist_Mono } from "next/font/google";
 import { Footer } from "@/components/Footer";
@@ -91,11 +90,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // start fetching the first background track during HTML parse, well before
-  // React hydrates the <audio> element (keep in sync with TRACKS[0] in
-  // MusicProvider). Low priority so it never competes with hero clips.
-  preload("/audio/1.mp3", { as: "audio", fetchPriority: "low" });
-
   return (
     <html
       lang="en"

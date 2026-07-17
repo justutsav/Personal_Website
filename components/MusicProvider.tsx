@@ -71,6 +71,9 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   const [inZone, setInZone] = useState(false);
   const [idx, setIdx] = useState(0);
   const [hasCover, setHasCover] = useState(true);
+  // "none" until the first hero clip is buffered — the song must never race
+  // the clip the visitor is actually watching (matters most on mobile pipes)
+  const [preloadMode, setPreloadMode] = useState<"none" | "auto">("none");
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const fadeRef = useRef<number | null>(null);
@@ -195,6 +198,38 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
       endIO.disconnect();
     };
   }, [pathname, isMobileLayout]);
+
+  // ordered warm chain: the Preloader dispatches "warm-music" once hero clip 1
+  // is buffered; we fetch the track, then answer "music-ready" so it can warm
+  // the remaining clips. Fallback timer covers paths that never dispatch
+  // (reduced motion skips the preloader chain). Data-saver users are left
+  // alone — the track still streams on demand when playback actually starts.
+  useEffect(() => {
+    let warmed = false;
+    const ready = () => window.dispatchEvent(new Event("music-ready"));
+    const warmMusic = () => {
+      if (warmed) return;
+      warmed = true;
+      const conn = (navigator as Navigator & { connection?: { saveData?: boolean } })
+        .connection;
+      const a = audioRef.current;
+      if (conn?.saveData || !a) {
+        ready();
+        return;
+      }
+      a.addEventListener("canplaythrough", ready, { once: true });
+      a.addEventListener("error", ready, { once: true });
+      setPreloadMode("auto");
+      // only kick the fetch if playback hasn't already begun on its own
+      if (a.paused && a.readyState < 3) a.load();
+    };
+    window.addEventListener("warm-music", warmMusic);
+    const fallback = window.setTimeout(warmMusic, 8000);
+    return () => {
+      window.removeEventListener("warm-music", warmMusic);
+      window.clearTimeout(fallback);
+    };
+  }, []);
 
   // music only begins once the user actually scrolls into the Work zone this
   // load (never on plain page load / refresh). `started` is NOT persisted.
@@ -338,11 +373,11 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
   return (
     <MusicCtx.Provider value={value}>
       {/* audio lives here so playback survives route changes. No loop — tracks
-          advance on end via onEnded, wrapping back to the first.
-          preload="auto": the current track (compressed, ~2.5-4MB) buffers from
-          page load so the first play hits instantly on scroll — lazy loading
-          here made the music miss its moment. */}
-      <audio ref={audioRef} src={track.src} onEnded={onEnded} preload="auto" />
+          advance on end via onEnded, wrapping back to the first. preload flips
+          none→auto once hero clip 1 is buffered (warm chain above) so the
+          track is ready before the user scrolls into the Work zone without
+          ever racing the clip for bandwidth. */}
+      <audio ref={audioRef} src={track.src} onEnded={onEnded} preload={preloadMode} />
       {children}
     </MusicCtx.Provider>
   );

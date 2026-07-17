@@ -62,17 +62,36 @@ export function Preloader() {
     }
     document.documentElement.style.overflow = "hidden";
 
-    // Best-effort: warm the leading hero clips while the colours run, filling
-    // the cache the hero's <video> reuses. Purely background — the animation
+    // Best-effort warm chain, strictly ordered so nothing competes on a
+    // narrow pipe (mobile especially): clip 1 first → then the music
+    // (MusicProvider listens for "warm-music" and answers "music-ready") →
+    // then the remaining lead clips. Purely background — the animation
     // timeline never blocks on it.
-    const videos = HERO_PRELOAD_SRCS.map((src) => {
+    const videos: HTMLVideoElement[] = [];
+    const warm = (src: string) => {
       const v = document.createElement("video");
       v.muted = true;
       v.preload = "auto";
       v.src = src;
       v.load();
+      videos.push(v);
       return v;
-    });
+    };
+
+    const first = warm(HERO_PRELOAD_SRCS[0]);
+    let musicAsked = false;
+    const askMusic = () => {
+      if (musicAsked) return;
+      musicAsked = true;
+      window.dispatchEvent(new Event("warm-music"));
+    };
+    first.addEventListener("canplaythrough", askMusic, { once: true });
+    first.addEventListener("error", askMusic, { once: true });
+    // slow network: don't starve the song forever behind a stalling clip
+    const askTimer = window.setTimeout(askMusic, 7000);
+
+    const warmRest = () => HERO_PRELOAD_SRCS.slice(1).forEach(warm);
+    window.addEventListener("music-ready", warmRest, { once: true });
 
     const anim = animate(hole, 160, {
       duration: WIPE_DUR,
@@ -87,6 +106,8 @@ export function Preloader() {
     return () => {
       anim.stop();
       document.documentElement.style.overflow = "";
+      window.clearTimeout(askTimer);
+      window.removeEventListener("music-ready", warmRest);
       videos.forEach((v) => {
         v.removeAttribute("src");
         v.load(); // release the buffer we were holding
