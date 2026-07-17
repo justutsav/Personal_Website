@@ -115,7 +115,7 @@ export function Nav() {
           className="group flex items-center gap-2.5 font-display tracking-tight"
         >
           <Image
-            src="/avatar.png"
+            src="/avatar2.png"
             alt="Utsav"
             width={34}
             height={34}

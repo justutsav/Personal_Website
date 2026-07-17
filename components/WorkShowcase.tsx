@@ -22,13 +22,13 @@ type Palette = { bg: string; ink: string; soft: string };
 // legible, no two deck cards share a hue).
 //   grit      marigold — echoes the app's orange brand over cream shots
 //   zentry    light lavender-white — flatters the warm-tan/lavender cover
-//   atul      royal blue — matches the app's blue+green dashboards
+//   atul      deep bronze — matches the app's black+gold luxe theme
 //   astro     deep amethyst — pushes the cosmic purple, floats the gold moon
 //   splitfree teal — the app's own accent, pops its cream screenshots
 const PALETTES: Record<string, Palette> = {
   grit: { bg: "#e8a11c", ink: "#241606", soft: "rgba(36,22,6,0.72)" },
   "zentry-clone": { bg: "#dfdff0", ink: "#1a1330", soft: "rgba(26,19,48,0.7)" },
-  "atul-finance": { bg: "#2833bd", ink: "#eef1ff", soft: "rgba(238,241,255,0.72)" },
+  "atul-finance": { bg: "#54390f", ink: "#f7ead0", soft: "rgba(247,234,208,0.72)" },
   astro: { bg: "#5a2b86", ink: "#f6ecff", soft: "rgba(246,236,255,0.74)" },
   splitfree: { bg: "#0e8f7e", ink: "#eafff9", soft: "rgba(234,255,249,0.72)" },
   justtrade: { bg: "#ff5a24", ink: "#1a0e08", soft: "rgba(26,14,8,0.72)" },

@@ -32,7 +32,6 @@ type Chapter = {
   spine?: boolean;
   connector?: string;
   more?: string;
-  image?: string;
 };
 
 const CHAPTERS: Chapter[] = [
@@ -83,7 +82,6 @@ const CHAPTERS: Chapter[] = [
     spine: true,
     side: "down",
     accent: "blue",
-    image: "atul.jpg",
   },
   {
     year: "2025",
@@ -108,7 +106,6 @@ const CHAPTERS: Chapter[] = [
     spine: false,
     side: "down",
     accent: "coral",
-    image: "grit.jpg",
   },
   {
     year: "2025",
@@ -133,7 +130,6 @@ const CHAPTERS: Chapter[] = [
     spine: false,
     side: "down",
     accent: "coral",
-    image: "splitfree.jpg",
   },
   {
     year: "off the clock",
@@ -309,20 +305,6 @@ function DetailPanel({ chapter, onClose }: { chapter: Chapter | null; onClose: (
               {chapter.title}
             </h3>
 
-            {chapter.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={`/timeline/${chapter.image}`}
-                alt=""
-                className="mt-5 aspect-video w-full rounded-lg object-cover"
-                onError={(e) => (e.currentTarget.style.display = "none")}
-              />
-            ) : (
-              <div className="mt-5 flex aspect-video w-full items-center justify-center rounded-lg bg-[rgba(255,255,255,0.05)] font-mono text-micro uppercase tracking-widest text-ink-soft">
-                image slot
-              </div>
-            )}
-
             <p className="mt-5 text-body text-ink">{chapter.body}</p>
             {chapter.more && <p className="mt-4 text-small text-ink-soft">{chapter.more}</p>}
           </motion.aside>
@@ -409,8 +391,9 @@ export function JourneyTimeline() {
   });
 
   const cur = CHAPTERS[active];
-  // taller section → slower scroll (the outro grow/hold felt too fast)
-  const heightVh = Math.max(300, Math.round((maxX / 1400) * 150 / 0.6));
+  // taller section → slower scroll; ×0.75 trims the total travel 25% so the
+  // outro ("real businesses run on my code") arrives faster
+  const heightVh = Math.max(300, Math.round(((maxX / 1400) * 150 / 0.6) * 0.75));
 
   if (reduce) {
     return (

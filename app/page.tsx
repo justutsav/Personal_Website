@@ -113,8 +113,12 @@ export default function Home() {
           id="contact"
           className="flex min-h-[calc(100svh-4rem)] flex-col justify-center bg-paper px-[var(--edge)] py-12"
         >
-          <div className="grid items-center gap-10 md:grid-cols-[1.05fr_1fr]">
-            <div>
+          {/* centred portrait, contact copy split around it: kicker + title on
+              the left (right-aligned against the photo), pitch + CTAs on the
+              right. Image column is aspect-derived (66vh tall × 0.73 ≈ 48vh)
+              so both text tracks share the leftover space equally. */}
+          <div className="grid items-center gap-10 md:grid-cols-[1fr_auto_1fr]">
+            <div className="md:text-right">
               <Reveal>
                 <p className="mb-4 font-mono text-micro uppercase tracking-[0.25em] text-accent">
                   Contact
@@ -122,10 +126,19 @@ export default function Home() {
               </Reveal>
               <KineticTitle
                 text="HAVE SOMETHING THAT SHOULD EXIST?"
-                className="font-display max-w-[13ch] text-[clamp(1.9rem,4vw,3.4rem)] font-extrabold uppercase leading-[1.02]"
+                className="font-display max-w-[13ch] text-[clamp(1.9rem,4vw,3.4rem)] font-extrabold uppercase leading-[1.02] md:ml-auto"
               />
+            </div>
+
+            <Reveal delay={0.2}>
+              <div className="h-[44vh] w-full md:h-[66vh] md:w-[48vh]">
+                <ContactMedia />
+              </div>
+            </Reveal>
+
+            <div>
               <Reveal delay={0.3}>
-                <p className="mt-5 max-w-[42ch] text-small text-ink-soft">
+                <p className="max-w-[42ch] text-small text-ink-soft">
                   Client work — web apps, dashboards, mobile, automation. Tell
                   me what you need; I&apos;ll tell you how I&apos;d build it.
                 </p>
@@ -145,12 +158,6 @@ export default function Home() {
                 </div>
               </Reveal>
             </div>
-
-            <Reveal delay={0.2}>
-              <div className="h-[38vh] w-full md:h-[62vh]">
-                <ContactMedia />
-              </div>
-            </Reveal>
           </div>
         </section>
         </div>
