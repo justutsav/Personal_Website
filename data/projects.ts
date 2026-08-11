@@ -162,11 +162,11 @@ export const projects: Project[] = [
       problem:
         "A client, Advik, wanted a single place for astrology — where users generate their kundli (birth chart), read it, and chat with astrologers, all in one app.",
       build:
-        "Building the full product: kundli generation and presentation, the reading views, and a chat experience for talking with astrologers. It's currently in its UI development phase.",
+        "Built the full product: kundli generation and presentation, the reading views, and a chat experience for talking with astrologers. It's now in its testing phase, ahead of launch.",
       outcome:
         "In active development as a paid client engagement — a second client relationship, and proof the pattern repeats: someone brings an idea, I build the product.",
     },
-    privateNote: "Client owns the product, so the repo stays theirs. It's still in its UI build phase; the flow is shown with early screenshots.",
+    privateNote: "Client owns the product, so the repo stays theirs. It's in testing ahead of launch; the flow is shown with screenshots from the app.",
   },
   {
     slug: "zentry-clone",
