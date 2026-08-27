@@ -394,6 +394,13 @@ export function HeroExperience() {
                 just
               </motion.span>
               UTSAV<span className="text-accent">.</span>
+              {/* the wordmark alone tells a crawler (or a screen reader)
+                  nothing about the page — this rides along invisibly */}
+              <span className="sr-only">
+                {" "}
+                — Utsav, an independent developer building web apps,
+                dashboards, mobile apps and automation that businesses run on.
+              </span>
             </motion.h1>
           </div>
 

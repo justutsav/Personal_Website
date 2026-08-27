@@ -1,3 +1,11 @@
+import Link from "next/link";
+
+/** trust anchors — the pages agents check before recommending anyone */
+const pages = [
+  { label: "Contact", href: "/contact" },
+  { label: "Privacy", href: "/privacy" },
+];
+
 const socials = [
   { label: "GitHub", href: "https://github.com/justutsav" },
   { label: "Monkeytype", href: "https://monkeytype.com/profile/justutsav" },
@@ -12,7 +20,17 @@ export function Footer() {
         <p className="font-mono text-micro text-ink-soft">
           © {new Date().getFullYear()} Utsav · justutsav everywhere
         </p>
-        <ul className="flex gap-5">
+        <ul className="flex flex-wrap gap-5">
+          {pages.map((p) => (
+            <li key={p.label}>
+              <Link
+                href={p.href}
+                className="font-mono text-micro text-ink-soft hover:text-accent transition-colors duration-200"
+              >
+                {p.label}
+              </Link>
+            </li>
+          ))}
           {socials.map((s) => (
             <li key={s.label}>
               <a

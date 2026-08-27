@@ -10,6 +10,7 @@ export default function NotFound() {
   const links = [
     { href: "/", label: "Home", note: "what I build, the numbers, selected work" },
     { href: "/about", label: "About", note: "background, infrastructure, live activity" },
+    { href: "/contact", label: "Contact", note: "how to hire me, and what to send first" },
     ...featuredProjects.slice(0, 3).map((p) => ({
       href: `/work/${p.slug}`,
       label: p.name,

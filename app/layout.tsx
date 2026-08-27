@@ -79,6 +79,23 @@ const personJsonLd = {
   jobTitle: "Independent Software Developer",
   description:
     "Independent developer building web apps, dashboards, mobile apps and automation for real businesses.",
+  address: { "@type": "PostalAddress", addressCountry: "IN" },
+  knowsAbout: [
+    "Web application development",
+    "React",
+    "TypeScript",
+    "Supabase",
+    "PostgreSQL",
+    "Android app development",
+    "Automation and AI tooling",
+  ],
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "Client enquiries",
+    email: "justutsav.05@gmail.com",
+    url: "https://justutsav.com/contact",
+    availableLanguage: ["English", "Hindi"],
+  },
   sameAs: [
     "https://github.com/justutsav",
     "https://www.linkedin.com/in/justutsav",

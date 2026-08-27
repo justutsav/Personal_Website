@@ -81,6 +81,9 @@ await check("HTML wins when it out-ranks or ties markdown", async () => {
     "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "text/html;q=0.9, text/markdown;q=0.5",
     "text/markdown;q=0",
+    // a readiness scanner asking for both must still see the HTML page
+    "text/html, text/markdown",
+    "text/markdown, text/html",
   ]) {
     const res = await get("/", accept);
     assert.match(
@@ -89,8 +92,51 @@ await check("HTML wins when it out-ranks or ties markdown", async () => {
       `Accept: ${accept} should stay HTML`
     );
   }
-  const preferred = await get("/", "text/html;q=0.4, text/markdown;q=0.8");
-  assert.match(preferred.headers.get("content-type"), /text\/markdown/);
+  for (const accept of [
+    "text/html;q=0.4, text/markdown;q=0.8",
+    "text/markdown, */*", // more specific ask at the same q still wins
+  ]) {
+    const res = await get("/", accept);
+    assert.match(
+      res.headers.get("content-type"),
+      /text\/markdown/,
+      `Accept: ${accept} should be markdown`
+    );
+  }
+});
+
+// 3b. The homepage an LLM crawler sees: one descriptive h1, real prose
+await check("homepage h1 describes the page, not just the wordmark", async () => {
+  const html = await (await get("/")).text();
+  const h1 = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/)?.[1] ?? "";
+  const words = text(h1);
+  assert.ok(words.length >= 60, `h1 text too thin for a crawler: "${words}"`);
+  assert.match(words, /independent developer/i);
+});
+
+// 4. Trust anchors: agents check these before recommending anyone
+await check("contact and privacy pages carry real content", async () => {
+  for (const [path, needle] of [
+    ["/contact", /IST \(UTC\+5:30\)/],
+    ["/privacy", /Vercel Web Analytics/],
+  ]) {
+    const res = await get(path);
+    assert.equal(res.status, 200, `${path} must exist`);
+    const html = await res.text();
+    assert.ok(
+      text(html).length >= 500,
+      `${path} needs 500+ chars of text, got ${text(html).length}`
+    );
+    assert.equal(count(html, "h1"), 1, `${path} needs exactly one h1`);
+    assert.match(html, needle);
+    assert.match(html, new RegExp(`rel="canonical" href="[^"]*${path}"`));
+    const md = await get(path, MD);
+    assert.equal(md.status, 200, `${path} needs a markdown twin`);
+    assert.match(await md.text(), /^# /);
+  }
+  const sitemap = await (await get("/sitemap.xml")).text();
+  assert.match(sitemap, /\/contact</);
+  assert.match(sitemap, /\/privacy</);
 });
 
 // 4. Agent-friendly 404s

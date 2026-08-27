@@ -1,36 +1,40 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * RFC 9110 quality of one media type in an Accept header. More specific
- * matches win over wildcards: `text/markdown` > `text/*` > `*​/*`.
+ * How well an Accept header asks for one media type, per RFC 9110: the q of
+ * the matching range, plus how specific that range was — `text/markdown` (2)
+ * beats `text/*` (1) beats `*​/*` (0).
  */
-function quality(accept: string, type: string): number {
+function quality(accept: string, type: string): { q: number; rank: number } {
   const group = `${type.split("/")[0]}/*`;
-  let best = 0;
-  let bestRank = -1;
+  let best = { q: 0, rank: -1 };
   for (const part of accept.split(",")) {
     const [raw, ...params] = part.split(";");
     const media = raw.trim().toLowerCase();
     const rank = media === type ? 2 : media === group ? 1 : media === "*/*" ? 0 : -1;
-    if (rank < bestRank) continue;
-    const q = params
+    if (rank < best.rank) continue;
+    const param = params
       .map((p) => p.trim().toLowerCase())
       .find((p) => p.startsWith("q="));
-    const value = q ? Number(q.slice(2)) : 1;
-    const weight = Number.isNaN(value) ? 1 : value;
-    if (rank > bestRank || weight > best) {
-      bestRank = rank;
-      best = weight;
-    }
+    const parsed = param ? Number(param.slice(2)) : 1;
+    const q = Number.isNaN(parsed) ? 1 : parsed;
+    if (rank > best.rank || q > best.q) best = { q, rank };
   }
-  return bestRank < 0 ? 0 : best;
+  return best.rank < 0 ? { q: 0, rank: -1 } : best;
 }
 
-/** Markdown only when it is asked for by name and not out-ranked by HTML. */
+/**
+ * Markdown only when asked for by name AND preferred over HTML. An outright
+ * tie goes to HTML: a scanner listing both (`text/html, text/markdown`) wants
+ * to see what the page looks like, not its twin. A more specific ask at the
+ * same q still wins, so `text/markdown, *​/*` gets markdown.
+ */
 export function wantsMarkdown(accept: string | null): boolean {
   if (!accept || !/(^|,)\s*text\/markdown\b/i.test(accept)) return false;
   const md = quality(accept, "text/markdown");
-  return md > 0 && md >= quality(accept, "text/html");
+  const html = quality(accept, "text/html");
+  if (md.q <= 0) return false;
+  return md.q > html.q || (md.q === html.q && md.rank > html.rank);
 }
 
 export function proxy(request: NextRequest) {
