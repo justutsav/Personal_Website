@@ -23,6 +23,11 @@ export async function generateMetadata({
   return {
     title: `${project.name} — Utsav`,
     description: project.tagline,
+    // without this the root layout's canonical ("/") would point every case home
+    alternates: {
+      canonical: `/work/${slug}`,
+      types: { "text/markdown": `/md/work/${slug}` },
+    },
   };
 }
 

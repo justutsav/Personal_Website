@@ -7,6 +7,7 @@ import { KineticTitle } from "@/components/KineticTitle";
 export const metadata: Metadata = {
   title: "Interests — Utsav",
   description: "The interests wing is being rebuilt as something bigger. Coming soon.",
+  alternates: { canonical: "/interests" },
   // placeholder page — keep it out of search until the real wing ships
   robots: { index: false, follow: true },
 };

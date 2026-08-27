@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   title: "About — Utsav",
   description:
     "Independent developer. I build web apps, dashboards, mobile apps and the infrastructure under them.",
+  // without this the root layout's canonical ("/") would point every page home
+  alternates: { canonical: "/about", types: { "text/markdown": "/md/about" } },
 };
 
 type CreditItem = { title: string; by: string; href?: string; note?: string };

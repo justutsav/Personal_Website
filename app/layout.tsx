@@ -81,6 +81,9 @@ const personJsonLd = {
     "Independent developer building web apps, dashboards, mobile apps and automation for real businesses.",
   sameAs: [
     "https://github.com/justutsav",
+    "https://www.linkedin.com/in/justutsav",
+    "https://x.com/punctualbeing",
+    "https://www.youtube.com/@Blaze_Age",
     "https://monkeytype.com/profile/justutsav",
   ],
 };

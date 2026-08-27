@@ -11,17 +11,20 @@ export function KineticTitle({
   text,
   className,
   delay = 0,
+  as: Tag = "h1",
 }: {
   text: string;
   className?: string;
   delay?: number;
+  /** heading level — one h1 per page, so sections below it pass "h2" */
+  as?: "h1" | "h2";
 }) {
   const reduce = useReducedMotion();
   const words = text.split(" ");
   let charIndex = 0;
 
   return (
-    <h1 className={className} aria-label={text}>
+    <Tag className={className} aria-label={text}>
       {words.map((word, wi) => (
         <span key={wi} className="inline-block whitespace-nowrap">
           {word.split("").map((ch) => {
@@ -59,6 +62,6 @@ export function KineticTitle({
           {wi < words.length - 1 && <span className="inline-block">&nbsp;</span>}
         </span>
       ))}
-    </h1>
+    </Tag>
   );
 }

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
 import { Reveal } from "@/components/Reveal";
@@ -13,6 +14,11 @@ import { ContactMedia } from "@/components/ContactMedia";
 import { ContactDialog } from "@/components/ContactDialog";
 import { featuredProjects } from "@/data/projects";
 import { publicImageSize } from "@/lib/imageMeta";
+
+export const metadata: Metadata = {
+  // markdown twin is also served on this URL via `Accept: text/markdown`
+  alternates: { canonical: "/", types: { "text/markdown": "/md" } },
+};
 
 const heroStats = [
   { value: 75, prefix: "₹", suffix: "L+", label: "capital managed by my software" },
@@ -125,6 +131,7 @@ export default function Home() {
                 </p>
               </Reveal>
               <KineticTitle
+                as="h2"
                 text="HAVE SOMETHING THAT SHOULD EXIST?"
                 className="font-display max-w-[13ch] text-[clamp(1.9rem,4vw,3.4rem)] font-extrabold uppercase leading-[1.02] md:ml-auto"
               />
